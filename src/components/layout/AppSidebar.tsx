@@ -63,6 +63,12 @@ const navItems = [
     roles: ['admin'] 
   },
   { 
+    label: 'Teacher Management',
+    href: '/teachers', 
+    icon: <User className="h-5 w-5" />,
+    roles: ['admin'] 
+  },
+  { 
     label: 'Student Management',
     href: '/students', 
     icon: <Users className="h-5 w-5" />,

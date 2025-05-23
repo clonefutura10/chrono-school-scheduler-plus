@@ -8,9 +8,13 @@ import Index from "./pages/Index";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
-
-// Import mock pages for the new routes
-import { NotImplemented } from "./components/NotImplemented";
+import StudentManagement from "./pages/StudentManagement";
+import TeacherManagement from "./pages/TeacherManagement";
+import AttendanceManagement from "./pages/AttendanceManagement";
+import ReportsPage from "./pages/ReportsPage";
+import StudentSchedule from "./pages/StudentSchedule";
+import AssignmentsPage from "./pages/AssignmentsPage";
+import ClassesPage from "./pages/ClassesPage";
 
 const queryClient = new QueryClient();
 
@@ -22,14 +26,15 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/schedule" element={<NotImplemented title="My Schedule" />} />
-          <Route path="/assignments" element={<NotImplemented title="Assignments" />} />
-          <Route path="/classes" element={<NotImplemented title="Classes" />} />
+          <Route path="/schedule" element={<StudentSchedule />} />
+          <Route path="/assignments" element={<AssignmentsPage />} />
+          <Route path="/classes" element={<ClassesPage />} />
           <Route path="/teacher" element={<TeacherDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/students" element={<NotImplemented title="Student Management" />} />
-          <Route path="/attendance" element={<NotImplemented title="Attendance" />} />
-          <Route path="/reports" element={<NotImplemented title="Reports" />} />
+          <Route path="/students" element={<StudentManagement />} />
+          <Route path="/teachers" element={<TeacherManagement />} />
+          <Route path="/attendance" element={<AttendanceManagement />} />
+          <Route path="/reports" element={<ReportsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
