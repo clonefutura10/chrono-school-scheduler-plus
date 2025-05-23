@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { BookOpen, Calendar } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface StudentProfileProps {
   student: {
@@ -25,14 +26,6 @@ export function StudentProfile({ student }: StudentProfileProps) {
 
   const handleContactTeacher = () => {
     toast.info("Opening contact form for teacher communication");
-  };
-
-  const handleViewAssignments = () => {
-    toast.info("Viewing all assignments");
-  };
-
-  const handleViewAttendance = () => {
-    toast.info("Viewing attendance details");
   };
 
   return (
@@ -56,11 +49,15 @@ export function StudentProfile({ student }: StudentProfileProps) {
                   <Badge className="text-xs bg-green-100 text-green-800 hover:bg-green-200">Active</Badge>
                 </div>
                 <div className="flex gap-2 mt-2">
-                  <Button size="sm" variant="outline" onClick={handleViewAssignments}>
-                    <BookOpen className="mr-1 h-4 w-4" /> Assignments
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to="/assignments">
+                      <BookOpen className="mr-1 h-4 w-4" /> Assignments
+                    </Link>
                   </Button>
-                  <Button size="sm" variant="outline" onClick={handleViewAttendance}>
-                    <Calendar className="mr-1 h-4 w-4" /> Attendance
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to="/attendance">
+                      <Calendar className="mr-1 h-4 w-4" /> Attendance
+                    </Link>
                   </Button>
                 </div>
               </div>

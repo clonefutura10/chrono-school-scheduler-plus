@@ -1,8 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 
 interface TimelineEvent {
   id: number;
@@ -56,24 +60,78 @@ const getCategoryBadge = (category: string) => {
   }
 };
 
-const getStatusDot = (status?: string) => {
-  switch (status) {
-    case 'ongoing':
-      return <span className="h-2 w-2 rounded-full bg-yellow-500 mr-2"></span>;
-    case 'completed':
-      return <span className="h-2 w-2 rounded-full bg-green-500 mr-2"></span>;
-    case 'upcoming':
-      return <span className="h-2 w-2 rounded-full bg-gray-300 mr-2"></span>;
-    default:
-      return null;
-  }
-};
-
 interface AcademicTimelineProps {
   compact?: boolean;
 }
 
 export function AcademicTimeline({ compact = false }: AcademicTimelineProps) {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date("2025-11-15"));
+  
+  // Function to group events by date
+  const groupEventsByDate = (events: TimelineEvent[]) => {
+    const grouped: Record<string, TimelineEvent[]> = {};
+    
+    events.forEach(event => {
+      if (!grouped[event.date]) {
+        grouped[event.date] = [];
+      }
+      grouped[event.date].push(event);
+    });
+    
+    return grouped;
+  };
+  
+  const semesterEventsByDate = groupEventsByDate(semesterData);
+  const yearlyEventsByDate = groupEventsByDate(yearlyData);
+  
+  // Function to get dates with events
+  const getHighlightedDates = (events: Record<string, TimelineEvent[]>) => {
+    return Object.keys(events).map(dateStr => new Date(dateStr));
+  };
+  
+  // Custom Day Content for the Calendar
+  const renderDay = (day: Date, events: Record<string, TimelineEvent[]>) => {
+    const dateString = format(day, 'yyyy-MM-dd');
+    const dayEvents = events[dateString] || [];
+    
+    return (
+      <div className="relative w-full h-full">
+        <div>{format(day, 'd')}</div>
+        {dayEvents.length > 0 && (
+          <div className="absolute bottom-0 left-0 right-0 flex justify-center">
+            <div className="flex gap-0.5">
+              {dayEvents.map((event, index) => {
+                let dotColor = 'bg-gray-400';
+                if (event.category === 'academic') dotColor = 'bg-blue-500';
+                if (event.category === 'exam') dotColor = 'bg-red-500';
+                if (event.category === 'event') dotColor = 'bg-green-500';
+                if (event.category === 'holiday') dotColor = 'bg-purple-500';
+                
+                return (
+                  <div 
+                    key={index} 
+                    className={`w-1 h-1 rounded-full ${dotColor}`}
+                    style={{ display: index < 3 ? 'block' : 'none' }}
+                  />
+                );
+              })}
+              {dayEvents.length > 3 && (
+                <div className="w-1 h-1 rounded-full bg-gray-500" />
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+  
+  // Get events for selected date
+  const getEventsForDate = (date: Date | undefined, events: Record<string, TimelineEvent[]>) => {
+    if (!date) return [];
+    const dateString = format(date, 'yyyy-MM-dd');
+    return events[dateString] || [];
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -87,58 +145,114 @@ export function AcademicTimeline({ compact = false }: AcademicTimelineProps) {
           </TabsList>
           
           <TabsContent value="semester" className="mt-4">
-            <div className="space-y-4">
-              {semesterData
-                .slice(0, compact ? 5 : semesterData.length)
-                .map((item) => (
-                <div key={item.id} className="flex items-start space-x-2 p-2 border-b last:border-0">
-                  {getStatusDot(item.status)}
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium">{item.title}</p>
-                        <div className="mt-1">{getCategoryBadge(item.category)}</div>
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="border rounded-md p-4">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  className="rounded-md border"
+                  modifiers={{
+                    highlighted: getHighlightedDates(semesterEventsByDate),
+                  }}
+                  modifiersStyles={{
+                    highlighted: {
+                      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    }
+                  }}
+                />
+              </div>
+              
+              <div className="flex-1">
+                <div className="border rounded-md p-4">
+                  <h3 className="text-lg font-medium mb-4">
+                    {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'Select a date'}
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    {getEventsForDate(selectedDate, semesterEventsByDate).map((event) => (
+                      <div key={event.id} className="border-b pb-3 last:border-b-0">
+                        <div className="flex justify-between">
+                          <h4 className="font-medium">{event.title}</h4>
+                          {getCategoryBadge(event.category)}
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Status: {event.status}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">{new Date(item.date).toLocaleDateString()}</p>
-                    </div>
+                    ))}
+                    
+                    {getEventsForDate(selectedDate, semesterEventsByDate).length === 0 && (
+                      <p className="text-muted-foreground">No events scheduled for this date.</p>
+                    )}
                   </div>
                 </div>
-              ))}
-              {compact && semesterData.length > 5 && (
-                <div className="text-center">
-                  <Badge variant="outline" className="cursor-pointer">
-                    + {semesterData.length - 5} more events
-                  </Badge>
-                </div>
-              )}
+                
+                {!compact && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Badge className="bg-blue-100 text-blue-800">Academic Event</Badge>
+                    <Badge className="bg-red-100 text-red-800">Exam</Badge>
+                    <Badge className="bg-green-100 text-green-800">School Event</Badge>
+                    <Badge className="bg-purple-100 text-purple-800">Holiday</Badge>
+                  </div>
+                )}
+              </div>
             </div>
           </TabsContent>
           
           <TabsContent value="yearly" className="mt-4">
-            <div className="space-y-4">
-              {yearlyData
-                .slice(0, compact ? 5 : yearlyData.length)
-                .map((item) => (
-                <div key={item.id} className="flex items-start space-x-2 p-2 border-b last:border-0">
-                  {getStatusDot(item.status)}
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium">{item.title}</p>
-                        <div className="mt-1">{getCategoryBadge(item.category)}</div>
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="border rounded-md p-4">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  className="rounded-md border"
+                  modifiers={{
+                    highlighted: getHighlightedDates(yearlyEventsByDate),
+                  }}
+                  modifiersStyles={{
+                    highlighted: {
+                      backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    }
+                  }}
+                />
+              </div>
+              
+              <div className="flex-1">
+                <div className="border rounded-md p-4">
+                  <h3 className="text-lg font-medium mb-4">
+                    {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'Select a date'}
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    {getEventsForDate(selectedDate, yearlyEventsByDate).map((event) => (
+                      <div key={event.id} className="border-b pb-3 last:border-b-0">
+                        <div className="flex justify-between">
+                          <h4 className="font-medium">{event.title}</h4>
+                          {getCategoryBadge(event.category)}
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Status: {event.status}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted-foreground">{new Date(item.date).toLocaleDateString()}</p>
-                    </div>
+                    ))}
+                    
+                    {getEventsForDate(selectedDate, yearlyEventsByDate).length === 0 && (
+                      <p className="text-muted-foreground">No events scheduled for this date.</p>
+                    )}
                   </div>
                 </div>
-              ))}
-              {compact && yearlyData.length > 5 && (
-                <div className="text-center">
-                  <Badge variant="outline" className="cursor-pointer">
-                    + {yearlyData.length - 5} more events
-                  </Badge>
-                </div>
-              )}
+                
+                {!compact && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Badge className="bg-blue-100 text-blue-800">Academic Event</Badge>
+                    <Badge className="bg-red-100 text-red-800">Exam</Badge>
+                    <Badge className="bg-green-100 text-green-800">School Event</Badge>
+                    <Badge className="bg-purple-100 text-purple-800">Holiday</Badge>
+                  </div>
+                )}
+              </div>
             </div>
           </TabsContent>
         </Tabs>
