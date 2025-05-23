@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudentProfile } from '@/components/student/StudentProfile';
 import { AttendanceChart } from '@/components/student/AttendanceChart';
 import { UpcomingAssignments } from '@/components/student/UpcomingAssignments';
+import { AcademicTimeline } from '@/components/timeline/AcademicTimeline';
 
 const Index = () => {
   // Mock data for the student
@@ -98,6 +99,8 @@ const Index = () => {
                 />
               </CardContent>
             </Card>
+            
+            <AcademicTimeline compact={true} />
           </TabsContent>
           
           <TabsContent value="assignments" className="mt-4">

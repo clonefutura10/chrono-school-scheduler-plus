@@ -11,6 +11,7 @@ import { DailyTimetable } from '@/components/timetable/DailyTimetable';
 import { GradeDivisionSelector } from '@/components/timetable/GradeDivisionSelector';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { AcademicTimeline } from '@/components/timeline/AcademicTimeline';
 
 const AdminDashboard = () => {
   const [selectedGrade, setSelectedGrade] = useState('10');
@@ -126,6 +127,8 @@ const AdminDashboard = () => {
               grade={selectedGrade} 
               division={selectedDivision} 
             />
+            
+            <AcademicTimeline />
           </TabsContent>
           
           <TabsContent value="requests" className="mt-4">

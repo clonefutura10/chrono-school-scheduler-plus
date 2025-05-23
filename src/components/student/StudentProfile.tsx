@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { BookOpen, Calendar } from 'lucide-react';
 
 interface StudentProfileProps {
   student: {
@@ -24,6 +25,14 @@ export function StudentProfile({ student }: StudentProfileProps) {
 
   const handleContactTeacher = () => {
     toast.info("Opening contact form for teacher communication");
+  };
+
+  const handleViewAssignments = () => {
+    toast.info("Viewing all assignments");
+  };
+
+  const handleViewAttendance = () => {
+    toast.info("Viewing attendance details");
   };
 
   return (
@@ -46,6 +55,14 @@ export function StudentProfile({ student }: StudentProfileProps) {
                   <Badge variant="outline" className="text-xs">Grade {student.grade}-{student.division}</Badge>
                   <Badge className="text-xs bg-green-100 text-green-800 hover:bg-green-200">Active</Badge>
                 </div>
+                <div className="flex gap-2 mt-2">
+                  <Button size="sm" variant="outline" onClick={handleViewAssignments}>
+                    <BookOpen className="mr-1 h-4 w-4" /> Assignments
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={handleViewAttendance}>
+                    <Calendar className="mr-1 h-4 w-4" /> Attendance
+                  </Button>
+                </div>
               </div>
               
               <div className="flex mt-2 md:mt-0 gap-2">
@@ -58,12 +75,21 @@ export function StudentProfile({ student }: StudentProfileProps) {
               </div>
             </div>
             
-            <div className="mt-4">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm font-medium">Term Progress</span>
-                <span className="text-xs text-muted-foreground">65%</span>
+            <div className="mt-4 space-y-3">
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-medium">Term Progress</span>
+                  <span className="text-xs text-muted-foreground">65%</span>
+                </div>
+                <Progress value={65} className="h-2" />
               </div>
-              <Progress value={65} className="h-2" />
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-medium">Learning Progress</span>
+                  <span className="text-xs text-muted-foreground">78%</span>
+                </div>
+                <Progress value={78} className="h-2" />
+              </div>
             </div>
           </div>
         </div>
