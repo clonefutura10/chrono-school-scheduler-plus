@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -138,7 +137,6 @@ const AssignmentsPage = () => {
   // Calculate completion stats
   const totalAssignments = assignments.length;
   const completedAssignments = assignments.filter(a => a.status === 'completed').length;
-  // Fix: Ensure we're using numbers in the calculation and avoid potential division by zero
   const completionPercentage = totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0;
   
   const pendingAssignments = assignments.filter(a => a.status === 'pending');
@@ -184,6 +182,18 @@ const AssignmentsPage = () => {
     setAssignments(updatedAssignments);
     setIsSubmitDialogOpen(false);
     toast.success("Assignment submitted successfully!");
+  };
+
+  // Custom sort function for assignments that avoids direct date arithmetic
+  const sortAssignments = (a, b) => {
+    // First sort by status (pending comes first)
+    if (a.status === 'pending' && b.status !== 'pending') return -1;
+    if (a.status !== 'pending' && b.status === 'pending') return 1;
+    
+    // Then sort by date
+    const dateA = new Date(a.dueDate).getTime();
+    const dateB = new Date(b.dueDate).getTime();
+    return dateA - dateB;
   };
 
   return (
@@ -415,12 +425,7 @@ const AssignmentsPage = () => {
                       
                       return matchesSearch && matchesSubject;
                     })
-                    .sort((a, b) => {
-                      if (a.status === 'pending' && b.status !== 'pending') return -1;
-                      if (a.status !== 'pending' && b.status === 'pending') return 1;
-                      // Fix: Use getTime() to convert Date objects to numbers for comparison
-                      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-                    })
+                    .sort(sortAssignments)
                     .map(assignment => (
                       <div key={assignment.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg">
                         <div className="flex flex-col space-y-1 mb-2 md:mb-0">
