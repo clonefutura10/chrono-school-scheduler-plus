@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -200,16 +199,27 @@ const AssignmentsPage = () => {
     toast.success("Assignment submitted successfully!");
   };
 
-  // Custom sort function for assignments with proper typing
+  // Fixed sort function to properly handle date conversion
   const sortAssignments = (a: Assignment, b: Assignment): number => {
     // First sort by status (pending comes first)
     if (a.status === 'pending' && b.status !== 'pending') return -1;
     if (a.status !== 'pending' && b.status === 'pending') return 1;
     
-    // Then sort by date - converting to timestamps first to ensure numerical values
-    const dateA = new Date(a.dueDate).getTime();
-    const dateB = new Date(b.dueDate).getTime();
-    return dateA - dateB;
+    // Then sort by date - ensuring we have proper number values for comparison
+    try {
+      // Convert dates to milliseconds timestamps
+      const dateATime = new Date(a.dueDate).getTime();
+      const dateBTime = new Date(b.dueDate).getTime();
+      
+      // Ensure we have actual numbers before comparison
+      if (!isNaN(dateATime) && !isNaN(dateBTime)) {
+        return dateATime - dateBTime;
+      }
+      return 0; // Default case if dates are invalid
+    } catch (error) {
+      console.error("Error comparing dates:", error);
+      return 0; // Fallback if any error occurs
+    }
   };
 
   return (
