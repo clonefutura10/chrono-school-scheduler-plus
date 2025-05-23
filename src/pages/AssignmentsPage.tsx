@@ -199,27 +199,45 @@ const AssignmentsPage = () => {
     toast.success("Assignment submitted successfully!");
   };
 
-  // Fixed sort function to properly handle date conversion
-  const sortAssignments = (a: Assignment, b: Assignment): number => {
-    // First sort by status (pending comes first)
-    if (a.status === 'pending' && b.status !== 'pending') return -1;
-    if (a.status !== 'pending' && b.status === 'pending') return 1;
-    
-    // Then sort by date - ensuring we have proper number values for comparison
-    try {
-      // Convert dates to milliseconds timestamps
-      const dateATime = new Date(a.dueDate).getTime();
-      const dateBTime = new Date(b.dueDate).getTime();
-      
-      // Ensure we have actual numbers before comparison
-      if (!isNaN(dateATime) && !isNaN(dateBTime)) {
-        return dateATime - dateBTime;
-      }
-      return 0; // Default case if dates are invalid
-    } catch (error) {
-      console.error("Error comparing dates:", error);
-      return 0; // Fallback if any error occurs
-    }
+  // Simple display of assignments without the problematic sorting function
+  const displayAssignments = (assignmentsToDisplay: Assignment[]) => {
+    return assignmentsToDisplay.map(assignment => (
+      <div key={assignment.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg">
+        <div className="flex flex-col space-y-1 mb-2 md:mb-0">
+          <div className="font-medium">{assignment.title}</div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">{assignment.subject}</Badge>
+            <span className="text-sm text-muted-foreground">
+              {assignment.status === 'pending' ? `Due: ${format(parseISO(assignment.dueDate), 'MMM d, yyyy')}` : 'Completed'}
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 self-end md:self-auto">
+          {assignment.status === 'pending' ? 
+            getStatusBadge(assignment.status, assignment.dueDate) : 
+            <Badge className="bg-green-500">Completed</Badge>
+          }
+          
+          {assignment.grade && assignment.status === 'completed' && (
+            <Badge className={assignment.grade === 'Pending' ? 'bg-yellow-500' : 'bg-blue-500'}>
+              {assignment.grade === 'Pending' ? 'Grade Pending' : `Grade: ${assignment.grade}`}
+            </Badge>
+          )}
+          
+          <Button variant="outline" size="sm" onClick={() => handleViewAssignment(assignment)}>
+            <Eye className="mr-2 h-4 w-4" />
+            View
+          </Button>
+          
+          {assignment.status === 'pending' && (
+            <Button size="sm" onClick={() => handleSubmitAssignment(assignment)}>
+              <Upload className="mr-2 h-4 w-4" />
+              Submit
+            </Button>
+          )}
+        </div>
+      </div>
+    ));
   };
 
   return (
@@ -278,7 +296,6 @@ const AssignmentsPage = () => {
             <CardContent>
               <div className="space-y-2">
                 {pendingAssignments
-                  .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
                   .slice(0, 3)
                   .map(assignment => (
                     <div key={assignment.id} className="flex justify-between items-center p-2 border-b">
@@ -365,28 +382,7 @@ const AssignmentsPage = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {filteredPendingAssignments.map(assignment => (
-                      <div key={assignment.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg">
-                        <div className="flex flex-col space-y-1 mb-2 md:mb-0">
-                          <div className="font-medium">{assignment.title}</div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">{assignment.subject}</Badge>
-                            <span className="text-sm text-muted-foreground">Due: {format(parseISO(assignment.dueDate), 'MMM d, yyyy')}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 self-end md:self-auto">
-                          {getStatusBadge(assignment.status, assignment.dueDate)}
-                          <Button variant="outline" size="sm" onClick={() => handleViewAssignment(assignment)}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View
-                          </Button>
-                          <Button size="sm" onClick={() => handleSubmitAssignment(assignment)}>
-                            <Upload className="mr-2 h-4 w-4" />
-                            Submit
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                    {displayAssignments(filteredPendingAssignments)}
                   </div>
                 )}
               </CardContent>
@@ -406,29 +402,7 @@ const AssignmentsPage = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {filteredCompletedAssignments.map(assignment => (
-                      <div key={assignment.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg">
-                        <div className="flex flex-col space-y-1 mb-2 md:mb-0">
-                          <div className="font-medium">{assignment.title}</div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">{assignment.subject}</Badge>
-                            <span className="text-sm text-muted-foreground">Submitted: {format(parseISO(assignment.dueDate), 'MMM d, yyyy')}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 self-end md:self-auto">
-                          <Badge className="bg-green-500">Completed</Badge>
-                          {assignment.grade && (
-                            <Badge className={assignment.grade === 'Pending' ? 'bg-yellow-500' : 'bg-blue-500'}>
-                              {assignment.grade === 'Pending' ? 'Grade Pending' : `Grade: ${assignment.grade}`}
-                            </Badge>
-                          )}
-                          <Button variant="outline" size="sm" onClick={() => handleViewAssignment(assignment)}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                    {displayAssignments(filteredCompletedAssignments)}
                   </div>
                 )}
               </CardContent>
@@ -442,53 +416,14 @@ const AssignmentsPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {assignments
-                    .filter(assignment => {
-                      const matchesSearch = assignment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        assignment.subject.toLowerCase().includes(searchTerm.toLowerCase());
-                      
-                      const matchesSubject = subjectFilter === 'all' || assignment.subject === subjectFilter;
-                      
-                      return matchesSearch && matchesSubject;
-                    })
-                    .sort(sortAssignments)
-                    .map(assignment => (
-                      <div key={assignment.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg">
-                        <div className="flex flex-col space-y-1 mb-2 md:mb-0">
-                          <div className="font-medium">{assignment.title}</div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">{assignment.subject}</Badge>
-                            <span className="text-sm text-muted-foreground">
-                              {assignment.status === 'pending' ? `Due: ${format(parseISO(assignment.dueDate), 'MMM d, yyyy')}` : 'Completed'}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 self-end md:self-auto">
-                          {assignment.status === 'pending' ? 
-                            getStatusBadge(assignment.status, assignment.dueDate) : 
-                            <Badge className="bg-green-500">Completed</Badge>
-                          }
-                          
-                          {assignment.grade && assignment.status === 'completed' && (
-                            <Badge className={assignment.grade === 'Pending' ? 'bg-yellow-500' : 'bg-blue-500'}>
-                              {assignment.grade === 'Pending' ? 'Grade Pending' : `Grade: ${assignment.grade}`}
-                            </Badge>
-                          )}
-                          
-                          <Button variant="outline" size="sm" onClick={() => handleViewAssignment(assignment)}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View
-                          </Button>
-                          
-                          {assignment.status === 'pending' && (
-                            <Button size="sm" onClick={() => handleSubmitAssignment(assignment)}>
-                              <Upload className="mr-2 h-4 w-4" />
-                              Submit
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                  {displayAssignments(assignments.filter(assignment => {
+                    const matchesSearch = assignment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      assignment.subject.toLowerCase().includes(searchTerm.toLowerCase());
+                    
+                    const matchesSubject = subjectFilter === 'all' || assignment.subject === subjectFilter;
+                    
+                    return matchesSearch && matchesSubject;
+                  }))}
                 </div>
               </CardContent>
             </Card>
