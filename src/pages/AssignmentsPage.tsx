@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -418,7 +417,7 @@ const AssignmentsPage = () => {
                     .sort((a, b) => {
                       if (a.status === 'pending' && b.status !== 'pending') return -1;
                       if (a.status !== 'pending' && b.status === 'pending') return 1;
-                      return new Date(a.dueDate) - new Date(b.dueDate);
+                      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
                     })
                     .map(assignment => (
                       <div key={assignment.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-lg">
