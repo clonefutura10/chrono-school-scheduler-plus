@@ -13,14 +13,36 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Calendar, User } from 'lucide-react';
+import { 
+  Home, 
+  User, 
+  CalendarCheck, 
+  Bookmark, 
+  Settings, 
+  BookOpen,
+  GraduationCap,
+  Users,
+  Clock
+} from 'lucide-react';
 
 const navItems = [
   { 
-    label: 'Dashboard',
+    label: 'Student Dashboard',
     href: '/', 
-    icon: <Calendar className="h-5 w-5" />,
+    icon: <Home className="h-5 w-5" />,
     roles: ['admin', 'teacher', 'student'] 
+  },
+  { 
+    label: 'My Schedule',
+    href: '/schedule', 
+    icon: <Clock className="h-5 w-5" />,
+    roles: ['student'] 
+  },
+  { 
+    label: 'Assignments',
+    href: '/assignments', 
+    icon: <BookOpen className="h-5 w-5" />,
+    roles: ['student', 'teacher'] 
   },
   { 
     label: 'Teacher Dashboard',
@@ -29,9 +51,33 @@ const navItems = [
     roles: ['teacher', 'admin'] 
   },
   { 
+    label: 'Classes',
+    href: '/classes', 
+    icon: <GraduationCap className="h-5 w-5" />,
+    roles: ['teacher', 'admin'] 
+  },
+  { 
     label: 'Admin Dashboard',
     href: '/admin', 
-    icon: <Calendar className="h-5 w-5" />,
+    icon: <Settings className="h-5 w-5" />,
+    roles: ['admin'] 
+  },
+  { 
+    label: 'Student Management',
+    href: '/students', 
+    icon: <Users className="h-5 w-5" />,
+    roles: ['admin'] 
+  },
+  { 
+    label: 'Attendance',
+    href: '/attendance', 
+    icon: <CalendarCheck className="h-5 w-5" />,
+    roles: ['admin', 'teacher'] 
+  },
+  { 
+    label: 'Reports',
+    href: '/reports', 
+    icon: <Bookmark className="h-5 w-5" />,
     roles: ['admin'] 
   },
 ];
