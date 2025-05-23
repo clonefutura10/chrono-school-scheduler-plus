@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -189,7 +190,9 @@ const AssignmentsPage = () => {
     if (!selectedAssignment) return;
     
     const updatedAssignments = assignments.map(a => 
-      a.id === selectedAssignment.id ? { ...a, status: 'completed', grade: 'Pending' } : a
+      a.id === selectedAssignment.id 
+        ? { ...a, status: 'completed' as const, grade: 'Pending' } 
+        : a
     );
     
     setAssignments(updatedAssignments);
@@ -203,8 +206,10 @@ const AssignmentsPage = () => {
     if (a.status === 'pending' && b.status !== 'pending') return -1;
     if (a.status !== 'pending' && b.status === 'pending') return 1;
     
-    // Then sort by date - using Number() to explicitly convert to number type
-    return Number(new Date(a.dueDate)) - Number(new Date(b.dueDate));
+    // Then sort by date - converting to timestamps first to ensure numerical values
+    const dateA = new Date(a.dueDate).getTime();
+    const dateB = new Date(b.dueDate).getTime();
+    return dateA - dateB;
   };
 
   return (
