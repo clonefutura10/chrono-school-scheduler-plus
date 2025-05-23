@@ -137,7 +137,7 @@ const AssignmentsPage = () => {
   // Calculate completion stats
   const totalAssignments = assignments.length;
   const completedAssignments = assignments.filter(a => a.status === 'completed').length;
-  // Fix: Ensure we're using numbers in the calculation by explicitly converting to number if needed
+  // Fix: Ensure we're using numbers in the calculation and avoid potential division by zero
   const completionPercentage = totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0;
   
   const pendingAssignments = assignments.filter(a => a.status === 'pending');
