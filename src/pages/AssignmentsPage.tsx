@@ -26,8 +26,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Define assignment type to ensure proper typing
+type Assignment = {
+  id: number;
+  title: string;
+  subject: string;
+  description: string;
+  dueDate: string;
+  status: "pending" | "completed";
+  grade: string | null;
+};
+
 // Mock data for assignments
-const mockAssignments = [
+const mockAssignments: Assignment[] = [
   { 
     id: 1, 
     title: "Mathematics - Linear Equations", 
@@ -103,7 +114,7 @@ const mockAssignments = [
 ];
 
 // Helper function to get status badge color
-const getStatusBadge = (status, dueDate) => {
+const getStatusBadge = (status: string, dueDate: string) => {
   if (status === 'completed') {
     return <Badge className="bg-green-500">Completed</Badge>;
   }
@@ -127,10 +138,10 @@ const getStatusBadge = (status, dueDate) => {
 };
 
 const AssignmentsPage = () => {
-  const [assignments, setAssignments] = useState(mockAssignments);
+  const [assignments, setAssignments] = useState<Assignment[]>(mockAssignments);
   const [searchTerm, setSearchTerm] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('all');
-  const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
 
@@ -164,17 +175,19 @@ const AssignmentsPage = () => {
   // Get unique subjects
   const subjects = Array.from(new Set(assignments.map(a => a.subject)));
   
-  const handleViewAssignment = (assignment) => {
+  const handleViewAssignment = (assignment: Assignment) => {
     setSelectedAssignment(assignment);
     setIsViewDialogOpen(true);
   };
   
-  const handleSubmitAssignment = (assignment) => {
+  const handleSubmitAssignment = (assignment: Assignment) => {
     setSelectedAssignment(assignment);
     setIsSubmitDialogOpen(true);
   };
   
   const handleCompleteSubmission = () => {
+    if (!selectedAssignment) return;
+    
     const updatedAssignments = assignments.map(a => 
       a.id === selectedAssignment.id ? { ...a, status: 'completed', grade: 'Pending' } : a
     );
@@ -184,16 +197,14 @@ const AssignmentsPage = () => {
     toast.success("Assignment submitted successfully!");
   };
 
-  // Custom sort function for assignments that avoids direct date arithmetic
-  const sortAssignments = (a, b) => {
+  // Custom sort function for assignments with proper typing
+  const sortAssignments = (a: Assignment, b: Assignment): number => {
     // First sort by status (pending comes first)
     if (a.status === 'pending' && b.status !== 'pending') return -1;
     if (a.status !== 'pending' && b.status === 'pending') return 1;
     
-    // Then sort by date
-    const dateA = new Date(a.dueDate).getTime();
-    const dateB = new Date(b.dueDate).getTime();
-    return dateA - dateB;
+    // Then sort by date - using Number() to explicitly convert to number type
+    return Number(new Date(a.dueDate)) - Number(new Date(b.dueDate));
   };
 
   return (
