@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -417,6 +418,7 @@ const AssignmentsPage = () => {
                     .sort((a, b) => {
                       if (a.status === 'pending' && b.status !== 'pending') return -1;
                       if (a.status !== 'pending' && b.status === 'pending') return 1;
+                      // Fix: Use getTime() to convert Date objects to numbers for comparison
                       return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
                     })
                     .map(assignment => (
