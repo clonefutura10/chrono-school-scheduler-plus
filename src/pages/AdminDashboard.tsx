@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { RequestsList } from '@/components/requests/RequestsList';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import { Calendar, User, BookOpen, School } from 'lucide-react';
+import { Calendar, User, BookOpen, School, Building, Users, Target } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,6 +12,9 @@ import { GradeDivisionSelector } from '@/components/timetable/GradeDivisionSelec
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { AcademicTimeline } from '@/components/timeline/AcademicTimeline';
+import { InfrastructureOverview } from '@/components/infrastructure/InfrastructureOverview';
+import { TeacherLoadSummary } from '@/components/staff/TeacherLoadSummary';
+import { AcademicPlanning } from '@/components/academic/AcademicPlanning';
 
 const AdminDashboard = () => {
   const [selectedGrade, setSelectedGrade] = useState('10');
@@ -46,7 +49,7 @@ const AdminDashboard = () => {
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
             <p className="text-muted-foreground">
-              Manage timetable changes and monitor school activities.
+              Comprehensive school management and analytics overview.
             </p>
           </div>
           <div className="flex gap-2">
@@ -68,31 +71,68 @@ const AdminDashboard = () => {
             icon={<Calendar className="h-4 w-4" />}
           />
           <StatsCard
-            title="Approved Changes"
-            value="28"
-            description="This month"
-            icon={<Calendar className="h-4 w-4" />}
+            title="Total Students"
+            value="1,043"
+            description="Across all grades"
+            icon={<Users className="h-4 w-4" />}
           />
           <StatsCard
             title="Total Teachers"
             value="48"
+            description="Active faculty"
             icon={<User className="h-4 w-4" />}
           />
           <StatsCard
-            title="Total Students"
-            value="1,400"
-            icon={<User className="h-4 w-4" />}
+            title="Infrastructure"
+            value="40"
+            description="Total classrooms"
+            icon={<Building className="h-4 w-4" />}
           />
         </div>
         
         <Separator />
 
-        <Tabs defaultValue="timetable" className="w-full">
-          <TabsList className="grid w-full md:w-[600px] grid-cols-3">
-            <TabsTrigger value="timetable">Timetable Management</TabsTrigger>
-            <TabsTrigger value="requests">Change Requests</TabsTrigger>
-            <TabsTrigger value="statistics">School Statistics</TabsTrigger>
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full md:w-[800px] grid-cols-5">
+            <TabsTrigger value="overview">School Overview</TabsTrigger>
+            <TabsTrigger value="timetable">Timetable</TabsTrigger>
+            <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
+            <TabsTrigger value="staff">Staff Management</TabsTrigger>
+            <TabsTrigger value="planning">Academic Planning</TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="overview" className="space-y-4 mt-4">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="rounded-md border p-4">
+                <div className="flex items-center gap-2">
+                  <School className="h-5 w-5 text-muted-foreground" />
+                  <h3 className="font-medium">Academic Structure</h3>
+                </div>
+                <p className="mt-2 text-2xl font-bold">2 Terms</p>
+                <p className="text-xs text-muted-foreground">220 working days per year</p>
+              </div>
+              
+              <div className="rounded-md border p-4">
+                <div className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-muted-foreground" />
+                  <h3 className="font-medium">Academic Year</h3>
+                </div>
+                <p className="mt-2 text-lg font-bold">2025-26</p>
+                <p className="text-xs text-muted-foreground">June 2025 - March 2026</p>
+              </div>
+              
+              <div className="rounded-md border p-4">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-muted-foreground" />
+                  <h3 className="font-medium">Vision Theme</h3>
+                </div>
+                <p className="mt-2 text-lg font-bold">Innovation & Inclusion</p>
+                <p className="text-xs text-muted-foreground">NEP 2020 guidelines integrated</p>
+              </div>
+            </div>
+            
+            <RequestsList showActions={true} />
+          </TabsContent>
           
           <TabsContent value="timetable" className="space-y-4 mt-4">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
@@ -131,46 +171,16 @@ const AdminDashboard = () => {
             <AcademicTimeline />
           </TabsContent>
           
-          <TabsContent value="requests" className="mt-4">
-            <RequestsList showActions={true} />
+          <TabsContent value="infrastructure" className="mt-4">
+            <InfrastructureOverview />
           </TabsContent>
           
-          <TabsContent value="statistics" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>School Statistics</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-6">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <div className="rounded-md border p-4">
-                    <div className="flex items-center gap-2">
-                      <School className="h-5 w-5 text-muted-foreground" />
-                      <h3 className="font-medium">Grades</h3>
-                    </div>
-                    <p className="mt-2 text-2xl font-bold">10</p>
-                    <p className="text-xs text-muted-foreground">With 4 divisions each</p>
-                  </div>
-                  
-                  <div className="rounded-md border p-4">
-                    <div className="flex items-center gap-2">
-                      <User className="h-5 w-5 text-muted-foreground" />
-                      <h3 className="font-medium">Students per Division</h3>
-                    </div>
-                    <p className="mt-2 text-2xl font-bold">35</p>
-                    <p className="text-xs text-muted-foreground">Average class size</p>
-                  </div>
-                  
-                  <div className="rounded-md border p-4">
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="h-5 w-5 text-muted-foreground" />
-                      <h3 className="font-medium">Subjects</h3>
-                    </div>
-                    <p className="mt-2 text-2xl font-bold">12</p>
-                    <p className="text-xs text-muted-foreground">Across all grades</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <TabsContent value="staff" className="mt-4">
+            <TeacherLoadSummary />
+          </TabsContent>
+          
+          <TabsContent value="planning" className="mt-4">
+            <AcademicPlanning />
           </TabsContent>
         </Tabs>
       </div>

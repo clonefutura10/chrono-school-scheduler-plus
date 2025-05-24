@@ -3,7 +3,7 @@ import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { DailyTimetable } from '@/components/timetable/DailyTimetable';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import { Calendar, Award, BookOpen, GraduationCap, Clock } from 'lucide-react';
+import { Calendar, Award, BookOpen, GraduationCap, Clock, Users, Target } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -13,9 +13,10 @@ import { StudentProfile } from '@/components/student/StudentProfile';
 import { AttendanceChart } from '@/components/student/AttendanceChart';
 import { UpcomingAssignments } from '@/components/student/UpcomingAssignments';
 import { AcademicTimeline } from '@/components/timeline/AcademicTimeline';
+import { Badge } from '@/components/ui/badge';
 
 const Index = () => {
-  // Mock data for the student
+  // Comprehensive student data based on school setup
   const student = {
     name: "John Smith",
     id: "STU10042",
@@ -24,7 +25,40 @@ const Index = () => {
     attendance: 92,
     ranking: 5,
     completedAssignments: 28,
-    totalAssignments: 32
+    totalAssignments: 32,
+    academicYear: "2025-26",
+    term: "Term 2",
+    classSize: 33
+  };
+
+  const academicProgress = [
+    { subject: "Mathematics", progress: 85, teacher: "John Smith", nextTest: "Dec 15" },
+    { subject: "Science", progress: 72, teacher: "Mr. Khan", nextTest: "Dec 12" },
+    { subject: "English", progress: 90, teacher: "Sarah Johnson", nextTest: "Dec 18" },
+    { subject: "History", progress: 65, teacher: "David Wilson", nextTest: "Dec 20" },
+    { subject: "Geography", progress: 78, teacher: "James Wilson", nextTest: "Dec 22" },
+    { subject: "Computer Science", progress: 88, teacher: "Emily Clark", nextTest: "Dec 25" }
+  ];
+
+  const courseCompletion = [
+    { category: "Semester Progress", progress: 60, total: 100, description: "Overall completion" },
+    { category: "Required Reading", progress: 75, total: 100, description: "Books completed" },
+    { category: "Lab Activities", progress: 88, total: 100, description: "Practical work" },
+    { category: "Project Milestones", progress: 45, total: 100, description: "Project completion" }
+  ];
+
+  const upcomingEvents = [
+    { event: "Unit Test 2", date: "Dec 10-15", type: "exam" },
+    { event: "Science Exhibition", date: "Jan 15", type: "competition" },
+    { event: "Annual Sports Day", date: "Dec 15", type: "sports" },
+    { event: "Winter Break", date: "Dec 24 - Jan 5", type: "holiday" }
+  ];
+
+  const classInfo = {
+    totalStudents: student.classSize,
+    division: student.division,
+    classTeacher: "Sarah Johnson",
+    subjects: academicProgress.length
   };
 
   return (
@@ -34,12 +68,15 @@ const Index = () => {
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Student Dashboard</h2>
             <p className="text-muted-foreground">
-              Welcome back, {student.name}. Here's your academic progress.
+              Welcome back, {student.name}. Academic Year {student.academicYear} - {student.term}
             </p>
           </div>
-          <div>
-            <Button>
+          <div className="flex gap-2">
+            <Button variant="outline">
               <Clock className="mr-2 h-4 w-4" /> Today's Schedule
+            </Button>
+            <Button variant="outline">
+              <Users className="mr-2 h-4 w-4" /> Class {student.grade}-{student.division}
             </Button>
           </div>
         </div>
@@ -56,7 +93,7 @@ const Index = () => {
           <StatsCard
             title="Class Ranking"
             value={`#${student.ranking}`}
-            description="Among 35 students"
+            description={`Among ${classInfo.totalStudents} students`}
             icon={<Award className="h-4 w-4" />}
           />
           <StatsCard
@@ -73,6 +110,72 @@ const Index = () => {
             description="Course completion rate"
             icon={<GraduationCap className="h-4 w-4" />}
           />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Class Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Class</span>
+                <Badge variant="outline">{student.grade}-{student.division}</Badge>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Students</span>
+                <span className="text-sm">{classInfo.totalStudents}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Class Teacher</span>
+                <span className="text-sm">{classInfo.classTeacher}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Subjects</span>
+                <span className="text-sm">{classInfo.subjects}</span>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Academic Status</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Academic Year</span>
+                <span className="text-sm">{student.academicYear}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Current Term</span>
+                <Badge variant="outline">{student.term}</Badge>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Student ID</span>
+                <span className="text-sm">{student.id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Status</span>
+                <Badge className="bg-green-100 text-green-800">Active</Badge>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Upcoming Events</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {upcomingEvents.slice(0, 3).map((event, index) => (
+                  <div key={index} className="text-sm">
+                    <div className="font-medium">{event.event}</div>
+                    <div className="text-muted-foreground text-xs">{event.date}</div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Separator />
@@ -115,79 +218,43 @@ const Index = () => {
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Academic Progress</CardTitle>
+              <CardTitle>Subject-wise Progress</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Mathematics</span>
-                  <span className="text-sm text-muted-foreground">85%</span>
+              {academicProgress.map((subject, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex justify-between">
+                    <div>
+                      <span className="text-sm font-medium">{subject.subject}</span>
+                      <div className="text-xs text-muted-foreground">
+                        Teacher: {subject.teacher} • Next Test: {subject.nextTest}
+                      </div>
+                    </div>
+                    <span className="text-sm text-muted-foreground">{subject.progress}%</span>
+                  </div>
+                  <Progress value={subject.progress} className="h-2" />
                 </div>
-                <Progress value={85} className="h-2" />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Science</span>
-                  <span className="text-sm text-muted-foreground">72%</span>
-                </div>
-                <Progress value={72} className="h-2" />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">English</span>
-                  <span className="text-sm text-muted-foreground">90%</span>
-                </div>
-                <Progress value={90} className="h-2" />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">History</span>
-                  <span className="text-sm text-muted-foreground">65%</span>
-                </div>
-                <Progress value={65} className="h-2" />
-              </div>
+              ))}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Course Completion</CardTitle>
+              <CardTitle>Course Completion Status</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Semester Progress</span>
-                  <span className="text-sm text-muted-foreground">60%</span>
+              {courseCompletion.map((course, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex justify-between">
+                    <div>
+                      <span className="text-sm font-medium">{course.category}</span>
+                      <div className="text-xs text-muted-foreground">{course.description}</div>
+                    </div>
+                    <span className="text-sm text-muted-foreground">{course.progress}%</span>
+                  </div>
+                  <Progress value={course.progress} className="h-2" />
                 </div>
-                <Progress value={60} className="h-2" />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Required Reading</span>
-                  <span className="text-sm text-muted-foreground">75%</span>
-                </div>
-                <Progress value={75} className="h-2" />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Lab Activities</span>
-                  <span className="text-sm text-muted-foreground">88%</span>
-                </div>
-                <Progress value={88} className="h-2" />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Project Milestones</span>
-                  <span className="text-sm text-muted-foreground">45%</span>
-                </div>
-                <Progress value={45} className="h-2" />
-              </div>
+              ))}
             </CardContent>
           </Card>
         </div>
