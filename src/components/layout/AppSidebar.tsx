@@ -16,7 +16,6 @@ import {
 import { 
   Home, 
   User, 
-  CalendarCheck, 
   Bookmark, 
   Settings, 
   BookOpen,
@@ -27,7 +26,7 @@ import {
 
 const navItems = [
   { 
-    label: 'Student Dashboard',
+    label: 'Student Portal',
     href: '/', 
     icon: <Home className="h-5 w-5" />,
     roles: ['admin', 'teacher', 'student'] 
@@ -45,21 +44,21 @@ const navItems = [
     roles: ['student', 'teacher'] 
   },
   { 
-    label: 'Teacher Dashboard',
+    label: 'Teacher Portal',
     href: '/teacher', 
     icon: <User className="h-5 w-5" />,
     roles: ['teacher', 'admin'] 
   },
   { 
-    label: 'Classes',
-    href: '/classes', 
-    icon: <GraduationCap className="h-5 w-5" />,
-    roles: ['teacher', 'admin'] 
-  },
-  { 
-    label: 'Admin Dashboard',
+    label: 'Admin Portal',
     href: '/admin', 
     icon: <Settings className="h-5 w-5" />,
+    roles: ['admin'] 
+  },
+  { 
+    label: 'Class Management',
+    href: '/classes', 
+    icon: <GraduationCap className="h-5 w-5" />,
     roles: ['admin'] 
   },
   { 
@@ -73,12 +72,6 @@ const navItems = [
     href: '/students', 
     icon: <Users className="h-5 w-5" />,
     roles: ['admin'] 
-  },
-  { 
-    label: 'Attendance',
-    href: '/attendance', 
-    icon: <CalendarCheck className="h-5 w-5" />,
-    roles: ['admin', 'teacher'] 
   },
   { 
     label: 'Reports',

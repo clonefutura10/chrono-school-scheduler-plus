@@ -16,6 +16,7 @@ import { InfrastructureOverview } from '@/components/infrastructure/Infrastructu
 import { TeacherLoadSummary } from '@/components/staff/TeacherLoadSummary';
 import { AcademicPlanning } from '@/components/academic/AcademicPlanning';
 import { studentStrengthData, teacherLoadData, academicStructure, schoolInfrastructure } from '@/data/schoolData';
+import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
   const [selectedGrade, setSelectedGrade] = useState('10');
@@ -51,7 +52,7 @@ const AdminDashboard = () => {
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Admin Portal</h2>
             <p className="text-muted-foreground">
               Comprehensive school management and analytics overview.
             </p>
@@ -92,6 +93,60 @@ const AdminDashboard = () => {
             description="Total classrooms"
             icon={<Building className="h-4 w-4" />}
           />
+        </div>
+
+        {/* Quick Access Management Cards */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Teacher Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">
+                Manage teacher profiles, assignments, and workload
+              </p>
+              <Button asChild className="w-full">
+                <Link to="/teachers">
+                  <User className="mr-2 h-4 w-4" />
+                  Manage Teachers
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Student Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">
+                Manage student records, admissions, and performance
+              </p>
+              <Button asChild className="w-full">
+                <Link to="/students">
+                  <Users className="mr-2 h-4 w-4" />
+                  Manage Students
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Class Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">
+                Manage class schedules, subjects, and assignments
+              </p>
+              <Button asChild className="w-full">
+                <Link to="/classes">
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Manage Classes
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
         
         <Separator />

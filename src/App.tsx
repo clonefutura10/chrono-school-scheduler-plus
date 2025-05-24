@@ -15,7 +15,6 @@ import ReportsPage from "./pages/ReportsPage";
 import StudentSchedule from "./pages/StudentSchedule";
 import AssignmentsPage from "./pages/AssignmentsPage";
 import ClassesPage from "./pages/ClassesPage";
-import { AttendanceChart } from "./components/student/AttendanceChart";
 
 const queryClient = new QueryClient();
 
@@ -34,7 +33,6 @@ const App = () => (
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/students" element={<StudentManagement />} />
           <Route path="/teachers" element={<TeacherManagement />} />
-          <Route path="/attendance" element={<AttendanceChart />} />
           <Route path="/attendance-management" element={<AttendanceManagement />} />
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="*" element={<NotFound />} />
