@@ -15,10 +15,14 @@ import { AcademicTimeline } from '@/components/timeline/AcademicTimeline';
 import { InfrastructureOverview } from '@/components/infrastructure/InfrastructureOverview';
 import { TeacherLoadSummary } from '@/components/staff/TeacherLoadSummary';
 import { AcademicPlanning } from '@/components/academic/AcademicPlanning';
+import { studentStrengthData, teacherLoadData, academicStructure, schoolInfrastructure } from '@/data/schoolData';
 
 const AdminDashboard = () => {
   const [selectedGrade, setSelectedGrade] = useState('10');
   const [selectedDivision, setSelectedDivision] = useState('A');
+
+  const totalStudents = studentStrengthData.reduce((sum, grade) => sum + grade.totalStudents, 0);
+  const totalTeachers = teacherLoadData.length;
 
   const handleApproveAll = () => {
     toast.success("All pending requests have been approved");
@@ -72,19 +76,19 @@ const AdminDashboard = () => {
           />
           <StatsCard
             title="Total Students"
-            value="1,043"
+            value={totalStudents.toString()}
             description="Across all grades"
             icon={<Users className="h-4 w-4" />}
           />
           <StatsCard
             title="Total Teachers"
-            value="48"
+            value={totalTeachers.toString()}
             description="Active faculty"
             icon={<User className="h-4 w-4" />}
           />
           <StatsCard
             title="Infrastructure"
-            value="40"
+            value={schoolInfrastructure.totalClassrooms.toString()}
             description="Total classrooms"
             icon={<Building className="h-4 w-4" />}
           />
@@ -108,8 +112,8 @@ const AdminDashboard = () => {
                   <School className="h-5 w-5 text-muted-foreground" />
                   <h3 className="font-medium">Academic Structure</h3>
                 </div>
-                <p className="mt-2 text-2xl font-bold">2 Terms</p>
-                <p className="text-xs text-muted-foreground">220 working days per year</p>
+                <p className="mt-2 text-2xl font-bold">{academicStructure.terms.length} Terms</p>
+                <p className="text-xs text-muted-foreground">{academicStructure.workingDays} working days per year</p>
               </div>
               
               <div className="rounded-md border p-4">
@@ -126,7 +130,7 @@ const AdminDashboard = () => {
                   <BookOpen className="h-5 w-5 text-muted-foreground" />
                   <h3 className="font-medium">Vision Theme</h3>
                 </div>
-                <p className="mt-2 text-lg font-bold">Innovation & Inclusion</p>
+                <p className="mt-2 text-lg font-bold">{academicStructure.theme}</p>
                 <p className="text-xs text-muted-foreground">NEP 2020 guidelines integrated</p>
               </div>
             </div>

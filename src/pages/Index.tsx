@@ -14,9 +14,10 @@ import { AttendanceChart } from '@/components/student/AttendanceChart';
 import { UpcomingAssignments } from '@/components/student/UpcomingAssignments';
 import { AcademicTimeline } from '@/components/timeline/AcademicTimeline';
 import { Badge } from '@/components/ui/badge';
+import { academicStructure, coCurricularEvents } from '@/data/schoolData';
 
 const Index = () => {
-  // Comprehensive student data based on school setup
+  // Student data based on school setup
   const student = {
     name: "John Smith",
     id: "STU10042",
@@ -28,7 +29,8 @@ const Index = () => {
     totalAssignments: 32,
     academicYear: "2025-26",
     term: "Term 2",
-    classSize: 33
+    classSize: 34,
+    learningProgress: 78
   };
 
   const academicProgress = [
@@ -47,12 +49,9 @@ const Index = () => {
     { category: "Project Milestones", progress: 45, total: 100, description: "Project completion" }
   ];
 
-  const upcomingEvents = [
-    { event: "Unit Test 2", date: "Dec 10-15", type: "exam" },
-    { event: "Science Exhibition", date: "Jan 15", type: "competition" },
-    { event: "Annual Sports Day", date: "Dec 15", type: "sports" },
-    { event: "Winter Break", date: "Dec 24 - Jan 5", type: "holiday" }
-  ];
+  const upcomingEvents = coCurricularEvents
+    .filter(event => new Date(event.date) >= new Date())
+    .slice(0, 4);
 
   const classInfo = {
     totalStudents: student.classSize,
@@ -106,7 +105,7 @@ const Index = () => {
           />
           <StatsCard
             title="Learning Progress"
-            value="78%"
+            value={`${student.learningProgress}%`}
             description="Course completion rate"
             icon={<GraduationCap className="h-4 w-4" />}
           />

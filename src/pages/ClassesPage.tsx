@@ -10,15 +10,41 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DailyTimetable } from '@/components/timetable/DailyTimetable';
 import { GradeDivisionSelector } from '@/components/timetable/GradeDivisionSelector';
+import { studentStrengthData, subjectAllocationData, teacherLoadData } from '@/data/schoolData';
 
-// Mock data for classes
-const mockClasses = [
-  { id: 1, grade: "10", division: "A", students: 32, subjects: ["Mathematics", "English", "Science", "History", "Geography"], classTeacher: "John Smith" },
-  { id: 2, grade: "10", division: "B", students: 30, subjects: ["Mathematics", "English", "Science", "History", "Geography"], classTeacher: "Sarah Johnson" },
-  { id: 3, grade: "11", division: "A", students: 28, subjects: ["Mathematics", "English", "Physics", "Chemistry", "Biology"], classTeacher: "Michael Brown" },
-  { id: 4, grade: "11", division: "B", students: 26, subjects: ["Mathematics", "English", "Physics", "Chemistry", "Computer Science"], classTeacher: "Jessica Lee" },
-  { id: 5, grade: "9", division: "A", students: 34, subjects: ["Mathematics", "English", "Science", "History", "Art"], classTeacher: "David Wilson" },
-];
+// Generate class data from school data
+const generateClassData = () => {
+  return studentStrengthData.map((gradeData, index) => {
+    const gradeDivisions = [];
+    for (let i = 0; i < gradeData.divisions; i++) {
+      const division = String.fromCharCode(65 + i); // A, B, C, etc.
+      const studentsPerDivision = Math.round(gradeData.totalStudents / gradeData.divisions);
+      
+      // Find relevant subjects for this grade
+      const gradeSubjects = subjectAllocationData
+        .filter(subject => subject.grade === gradeData.grade)
+        .map(subject => subject.subject);
+      
+      // Find class teacher
+      const possibleTeachers = teacherLoadData.filter(teacher => 
+        teacher.subjects.some(sub => gradeSubjects.some(gradeSub => sub.includes(gradeSub)))
+      );
+      const classTeacher = possibleTeachers[Math.floor(Math.random() * possibleTeachers.length)]?.name || "TBD";
+      
+      gradeDivisions.push({
+        id: `${gradeData.grade}-${division}`,
+        grade: gradeData.grade.replace('Class ', ''),
+        division: division,
+        students: studentsPerDivision,
+        subjects: gradeSubjects,
+        classTeacher: classTeacher
+      });
+    }
+    return gradeDivisions;
+  }).flat();
+};
+
+const mockClasses = generateClassData();
 
 // Mock data for students in a class
 const mockStudents = [
@@ -27,15 +53,6 @@ const mockStudents = [
   { id: 3, name: "Michael Davis", rollNo: "10A03", attendance: 92, performance: "Good" },
   { id: 4, name: "Sophia Lee", rollNo: "10A04", attendance: 98, performance: "Excellent" },
   { id: 5, name: "Ryan Smith", rollNo: "10A05", attendance: 85, performance: "Average" },
-];
-
-// Mock data for subjects and teachers
-const mockSubjectsTeachers = [
-  { subject: "Mathematics", teacher: "John Smith", weeksCompleted: 16, totalWeeks: 24, sessions: 4 },
-  { subject: "English", teacher: "Sarah Johnson", weeksCompleted: 14, totalWeeks: 24, sessions: 5 },
-  { subject: "Science", teacher: "Michael Brown", weeksCompleted: 15, totalWeeks: 24, sessions: 4 },
-  { subject: "History", teacher: "David Wilson", weeksCompleted: 18, totalWeeks: 24, sessions: 3 },
-  { subject: "Geography", teacher: "James Wilson", weeksCompleted: 17, totalWeeks: 24, sessions: 2 },
 ];
 
 const getPerformanceBadge = (performance) => {
@@ -51,7 +68,7 @@ const getPerformanceBadge = (performance) => {
 const ClassesPage = () => {
   const [selectedGrade, setSelectedGrade] = useState('10');
   const [selectedDivision, setSelectedDivision] = useState('A');
-  const [selectedClass, setSelectedClass] = useState(mockClasses[0]);
+  const [selectedClass, setSelectedClass] = useState(mockClasses.find(c => c.grade === '10' && c.division === 'A'));
   
   const handleClassSelect = (grade, division) => {
     setSelectedGrade(grade);
@@ -74,6 +91,22 @@ const ClassesPage = () => {
   const handleScheduleTest = () => {
     toast.success(`Test scheduled for Class ${selectedGrade}-${selectedDivision}`);
   };
+
+  // Get subject allocation for selected class
+  const getSubjectProgress = () => {
+    const gradeKey = `Class ${selectedGrade}`;
+    const relevantSubjects = subjectAllocationData.filter(subject => subject.grade === gradeKey);
+    
+    return relevantSubjects.map(subject => ({
+      subject: subject.subject,
+      teacher: subject.teacher,
+      weeksCompleted: Math.floor(Math.random() * 20) + 10,
+      totalWeeks: 24,
+      sessions: subject.periodsPerWeek
+    }));
+  };
+
+  const subjectProgress = getSubjectProgress();
 
   return (
     <AppLayout>
@@ -281,7 +314,7 @@ const ClassesPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  {mockSubjectsTeachers.map((subject, index) => (
+                  {subjectProgress.map((subject, index) => (
                     <div key={index} className="border rounded-lg p-4">
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                         <div>

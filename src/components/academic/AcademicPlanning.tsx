@@ -4,64 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar, Clock, Users, Target } from 'lucide-react';
-
-const academicStructure = {
-  academicYear: { start: "June 1, 2025", end: "March 31, 2026" },
-  workingDays: 220,
-  terms: [
-    { name: "Term 1", period: "Jun - Oct", workingDays: 110 },
-    { name: "Term 2", period: "Nov - Mar", workingDays: 110 }
-  ],
-  examinations: [
-    { type: "Unit Test 1", period: "July 15-20" },
-    { type: "Mid-Term", period: "August 20-30" },
-    { type: "Unit Test 2", period: "December 10-15" },
-    { type: "Final Exams", period: "March 1-15" }
-  ]
-};
-
-const weeklyPlanning = [
-  {
-    week: "June 1-7",
-    prePrimary: "School Reopens, Welcome Songs",
-    primary: "Orientation, Class Allotments",
-    secondary: "Orientation, Time-Table Finalization"
-  },
-  {
-    week: "June 8-14",
-    prePrimary: "Rhymes & Circle Time",
-    primary: "Class Rules & Club Selections",
-    secondary: "Leadership Elections & Career Talks"
-  },
-  {
-    week: "June 15-21",
-    prePrimary: "Colour Day: Red",
-    primary: "Storytelling Competition",
-    secondary: "Career Orientation Session (XI-XII)"
-  },
-  {
-    week: "June 22-30",
-    prePrimary: "Handprint Art & Free Play",
-    primary: "Drawing Competition",
-    secondary: "Practical Demo: Lab Safety & Project Planning"
-  }
-];
-
-const coCurricularEvents = [
-  { event: "Independence Day", date: "August 15", type: "celebration" },
-  { event: "Teachers' Day", date: "September 5", type: "celebration" },
-  { event: "Science Fair", date: "October 20", type: "competition" },
-  { event: "Annual Sports Day", date: "December 15", type: "sports" },
-  { event: "Annual Day", date: "December 20", type: "celebration" },
-  { event: "Science Exhibition", date: "January 15", type: "exhibition" }
-];
-
-const staffPlanning = [
-  { activity: "Teacher Orientation", date: "May 25-30", participants: "All Staff" },
-  { activity: "Curriculum Planning", date: "Monthly", participants: "Subject Heads" },
-  { activity: "Parent-Teacher Meetings", date: "End of each term", participants: "Class Teachers" },
-  { activity: "Internal Assessment", date: "Quarterly", participants: "Academic Team" }
-];
+import { academicStructure, weeklyPlanningData, coCurricularEvents, staffPlanningData } from '@/data/schoolData';
 
 export function AcademicPlanning() {
   const getEventBadgeColor = (type: string) => {
@@ -70,6 +13,7 @@ export function AcademicPlanning() {
       case 'competition': return 'bg-blue-100 text-blue-800';
       case 'sports': return 'bg-green-100 text-green-800';
       case 'exhibition': return 'bg-orange-100 text-orange-800';
+      case 'holiday': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -190,7 +134,7 @@ export function AcademicPlanning() {
                     </tr>
                   </thead>
                   <tbody>
-                    {weeklyPlanning.map((week, index) => (
+                    {weeklyPlanningData.map((week, index) => (
                       <tr key={index} className="border-b">
                         <td className="p-3 font-medium">{week.week}</td>
                         <td className="p-3">{week.prePrimary}</td>
@@ -235,7 +179,7 @@ export function AcademicPlanning() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {staffPlanning.map((activity, index) => (
+                {staffPlanningData.map((activity, index) => (
                   <div key={index} className="p-4 border rounded-lg">
                     <div className="flex justify-between items-start">
                       <div>

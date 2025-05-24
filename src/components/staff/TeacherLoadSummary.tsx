@@ -4,28 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
-
-const teacherData = [
-  { name: "Mrs. Sharma", subjects: ["English (Class 1-4)"], totalClasses: 24, maxCapacity: 30 },
-  { name: "Mr. Verma", subjects: ["Math (Class 1-3)"], totalClasses: 18, maxCapacity: 30 },
-  { name: "Mrs. Fernandez", subjects: ["EVS (Class 1-2)"], totalClasses: 12, maxCapacity: 25 },
-  { name: "Mr. Khan", subjects: ["Science (Class 10)"], totalClasses: 18, maxCapacity: 30 },
-  { name: "Sarah Johnson", subjects: ["English (Class 9-10)"], totalClasses: 22, maxCapacity: 30 },
-  { name: "Michael Brown", subjects: ["Physics (Class 11-12)"], totalClasses: 20, maxCapacity: 30 },
-  { name: "Jessica Lee", subjects: ["Chemistry (Class 11-12)"], totalClasses: 18, maxCapacity: 30 },
-  { name: "Karen Williams", subjects: ["Biology (Class 11-12)"], totalClasses: 19, maxCapacity: 30 },
-  { name: "Emily Clark", subjects: ["Computer Science"], totalClasses: 15, maxCapacity: 30 },
-  { name: "Robert Johnson", subjects: ["Physical Education"], totalClasses: 25, maxCapacity: 35 },
-];
-
-const subjectAllocation = [
-  { grade: "Class 1", subject: "English", periodsPerWeek: 5, teacher: "Mrs. Sharma", divisions: 3 },
-  { grade: "Class 1", subject: "Math", periodsPerWeek: 5, teacher: "Mr. Verma", divisions: 3 },
-  { grade: "Class 1", subject: "EVS", periodsPerWeek: 3, teacher: "Mrs. Fernandez", divisions: 3 },
-  { grade: "Class 10", subject: "Science", periodsPerWeek: 6, teacher: "Mr. Khan", divisions: 3 },
-  { grade: "Class 10", subject: "English", periodsPerWeek: 4, teacher: "Sarah Johnson", divisions: 3 },
-  { grade: "Class 10", subject: "Math", periodsPerWeek: 6, teacher: "John Smith", divisions: 3 },
-];
+import { teacherLoadData, subjectAllocationData } from '@/data/schoolData';
 
 export function TeacherLoadSummary() {
   const getLoadStatus = (current: number, max: number) => {
@@ -43,7 +22,7 @@ export function TeacherLoadSummary() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {teacherData.map((teacher, index) => {
+            {teacherLoadData.map((teacher, index) => {
               const loadStatus = getLoadStatus(teacher.totalClasses, teacher.maxCapacity);
               const percentage = (teacher.totalClasses / teacher.maxCapacity) * 100;
               const Icon = loadStatus.icon;
@@ -97,7 +76,7 @@ export function TeacherLoadSummary() {
                 </tr>
               </thead>
               <tbody>
-                {subjectAllocation.map((allocation, index) => (
+                {subjectAllocationData.map((allocation, index) => (
                   <tr key={index} className="border-b">
                     <td className="p-2">{allocation.grade}</td>
                     <td className="p-2">{allocation.subject}</td>

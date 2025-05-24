@@ -5,8 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
+import { academicStructure, coCurricularEvents } from '@/data/schoolData';
 
 interface TimelineEvent {
   id: number;
@@ -16,33 +15,35 @@ interface TimelineEvent {
   status?: "upcoming" | "ongoing" | "completed";
 }
 
-// Mock data for the semester timeline
+// Convert academic structure and events to timeline format
 const semesterData: TimelineEvent[] = [
   { id: 1, title: "Term 1 Classes Begin", date: "2025-06-01", category: "academic", status: "completed" },
-  { id: 2, title: "First Unit Test", date: "2025-07-15", category: "exam", status: "completed" },
-  { id: 3, title: "Mid-Term Exams", date: "2025-08-20", category: "exam", status: "completed" },
-  { id: 4, title: "Term 1 Ends", date: "2025-10-15", category: "academic", status: "completed" },
-  { id: 5, title: "Term 2 Classes Begin", date: "2025-11-01", category: "academic", status: "ongoing" },
-  { id: 6, title: "Second Unit Test", date: "2025-12-10", category: "exam", status: "upcoming" },
-  { id: 7, title: "Annual Sports Day", date: "2025-12-15", category: "event", status: "upcoming" },
-  { id: 8, title: "Winter Break", date: "2025-12-24", category: "holiday", status: "upcoming" },
-  { id: 9, title: "Classes Resume", date: "2026-01-06", category: "academic", status: "upcoming" },
-  { id: 10, title: "Final Exams", date: "2026-03-01", category: "exam", status: "upcoming" },
-  { id: 11, title: "Result Declaration", date: "2026-03-31", category: "academic", status: "upcoming" },
+  ...academicStructure.examinations.map((exam, index) => ({
+    id: index + 2,
+    title: exam.type,
+    date: exam.startDate,
+    category: "exam",
+    status: new Date(exam.startDate) < new Date() ? "completed" as const : "upcoming" as const
+  })),
+  { id: 10, title: "Term 1 Ends", date: "2025-10-15", category: "academic", status: "completed" },
+  { id: 11, title: "Term 2 Classes Begin", date: "2025-11-01", category: "academic", status: "ongoing" },
+  { id: 12, title: "Final Exams", date: "2026-03-01", category: "exam", status: "upcoming" },
+  { id: 13, title: "Result Declaration", date: "2026-03-31", category: "academic", status: "upcoming" },
 ];
 
-// Mock data for the yearly timeline
+// Convert co-curricular events to timeline format
 const yearlyData: TimelineEvent[] = [
   { id: 1, title: "Academic Year Begins", date: "2025-06-01", category: "academic", status: "completed" },
-  { id: 2, title: "Independence Day Celebration", date: "2025-08-15", category: "event", status: "completed" },
-  { id: 3, title: "Teachers' Day", date: "2025-09-05", category: "event", status: "completed" },
-  { id: 4, title: "Diwali Break", date: "2025-11-01", category: "holiday", status: "ongoing" },
-  { id: 5, title: "Annual Day Celebration", date: "2025-12-20", category: "event", status: "upcoming" },
-  { id: 6, title: "Science Exhibition", date: "2026-01-15", category: "event", status: "upcoming" },
-  { id: 7, title: "Sports Week", date: "2026-02-10", category: "event", status: "upcoming" },
-  { id: 8, title: "Final Assessments", date: "2026-03-01", category: "exam", status: "upcoming" },
-  { id: 9, title: "Academic Year Ends", date: "2026-03-31", category: "academic", status: "upcoming" },
-  { id: 10, title: "Summer Vacation Begins", date: "2026-04-15", category: "holiday", status: "upcoming" },
+  ...coCurricularEvents.map((event, index) => ({
+    id: index + 2,
+    title: event.event,
+    date: event.date,
+    category: event.type,
+    status: new Date(event.date) < new Date() ? "completed" as const : 
+           new Date(event.date).getTime() === new Date().getTime() ? "ongoing" as const : "upcoming" as const
+  })),
+  { id: 20, title: "Academic Year Ends", date: "2026-03-31", category: "academic", status: "upcoming" },
+  { id: 21, title: "Summer Vacation Begins", date: "2026-04-15", category: "holiday", status: "upcoming" },
 ];
 
 const getCategoryBadge = (category: string) => {
@@ -51,10 +52,16 @@ const getCategoryBadge = (category: string) => {
       return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Academic</Badge>;
     case 'exam':
       return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Exam</Badge>;
-    case 'event':
-      return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Event</Badge>;
+    case 'celebration':
+      return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">Celebration</Badge>;
+    case 'competition':
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Competition</Badge>;
+    case 'sports':
+      return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-200">Sports</Badge>;
     case 'holiday':
-      return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">Holiday</Badge>;
+      return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Holiday</Badge>;
+    case 'exhibition':
+      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Exhibition</Badge>;
     default:
       return <Badge>Other</Badge>;
   }
@@ -89,42 +96,6 @@ export function AcademicTimeline({ compact = false }: AcademicTimelineProps) {
     return Object.keys(events).map(dateStr => new Date(dateStr));
   };
   
-  // Custom Day Content for the Calendar
-  const renderDay = (day: Date, events: Record<string, TimelineEvent[]>) => {
-    const dateString = format(day, 'yyyy-MM-dd');
-    const dayEvents = events[dateString] || [];
-    
-    return (
-      <div className="relative w-full h-full">
-        <div>{format(day, 'd')}</div>
-        {dayEvents.length > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 flex justify-center">
-            <div className="flex gap-0.5">
-              {dayEvents.map((event, index) => {
-                let dotColor = 'bg-gray-400';
-                if (event.category === 'academic') dotColor = 'bg-blue-500';
-                if (event.category === 'exam') dotColor = 'bg-red-500';
-                if (event.category === 'event') dotColor = 'bg-green-500';
-                if (event.category === 'holiday') dotColor = 'bg-purple-500';
-                
-                return (
-                  <div 
-                    key={index} 
-                    className={`w-1 h-1 rounded-full ${dotColor}`}
-                    style={{ display: index < 3 ? 'block' : 'none' }}
-                  />
-                );
-              })}
-              {dayEvents.length > 3 && (
-                <div className="w-1 h-1 rounded-full bg-gray-500" />
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-  
   // Get events for selected date
   const getEventsForDate = (date: Date | undefined, events: Record<string, TimelineEvent[]>) => {
     if (!date) return [];
@@ -135,7 +106,7 @@ export function AcademicTimeline({ compact = false }: AcademicTimelineProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Academic Timeline</CardTitle>
+        <CardTitle>Academic Timeline - {academicStructure.theme}</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="semester">
@@ -192,8 +163,8 @@ export function AcademicTimeline({ compact = false }: AcademicTimelineProps) {
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Badge className="bg-blue-100 text-blue-800">Academic Event</Badge>
                     <Badge className="bg-red-100 text-red-800">Exam</Badge>
-                    <Badge className="bg-green-100 text-green-800">School Event</Badge>
-                    <Badge className="bg-purple-100 text-purple-800">Holiday</Badge>
+                    <Badge className="bg-green-100 text-green-800">Competition</Badge>
+                    <Badge className="bg-purple-100 text-purple-800">Celebration</Badge>
                   </div>
                 )}
               </div>

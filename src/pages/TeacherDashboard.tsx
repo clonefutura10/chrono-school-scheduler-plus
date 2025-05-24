@@ -8,12 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Users, Clock, Target } from 'lucide-react';
+import { teacherLoadData, subjectAllocationData, coCurricularEvents } from '@/data/schoolData';
 
 const teacherProfile = {
   name: "Sarah Johnson",
   subjects: ["English"],
   grades: ["Class 9", "Class 10"],
-  totalClasses: 22,
+  totalClasses: 16,
   maxCapacity: 30,
   schedule: [
     { day: "Monday", periods: ["9-A English", "9-B English", "10-A English", "10-B English"] },
@@ -24,12 +25,14 @@ const teacherProfile = {
   ]
 };
 
-const upcomingEvents = [
-  { event: "English Essay Competition", date: "November 25", type: "competition" },
-  { event: "Parent-Teacher Meeting", date: "November 30", type: "meeting" },
-  { event: "Mid-term Exam Preparation", date: "December 5", type: "exam" },
-  { event: "Literary Club Meeting", date: "December 10", type: "club" }
-];
+const upcomingEvents = coCurricularEvents
+  .filter(event => new Date(event.date) >= new Date())
+  .slice(0, 4)
+  .map(event => ({
+    event: event.event,
+    date: event.date,
+    type: event.type
+  }));
 
 const studentProgress = [
   { class: "9-A", totalStudents: 35, assignments: { submitted: 32, pending: 3 }, avgScore: 78 },
@@ -40,6 +43,8 @@ const studentProgress = [
 
 const TeacherDashboard = () => {
   const workloadPercentage = (teacherProfile.totalClasses / teacherProfile.maxCapacity) * 100;
+  const totalStudents = studentProgress.reduce((sum, cls) => sum + cls.totalStudents, 0);
+  const avgPerformance = Math.round(studentProgress.reduce((sum, cls) => sum + cls.avgScore, 0) / studentProgress.length);
 
   return (
     <AppLayout>
@@ -60,7 +65,7 @@ const TeacherDashboard = () => {
           />
           <StatsCard
             title="Students"
-            value="134"
+            value={totalStudents.toString()}
             description="Across all classes"
             icon={<Users className="h-4 w-4" />}
           />
@@ -72,7 +77,7 @@ const TeacherDashboard = () => {
           />
           <StatsCard
             title="Avg Performance"
-            value="81%"
+            value={`${avgPerformance}%`}
             description="Class average"
             icon={<Target className="h-4 w-4" />}
           />
