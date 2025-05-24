@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TimetableCell } from './TimetableCell';
+import { subjectAllocationData } from '@/data/schoolData';
 
 // Sample data for the timetable
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -17,54 +18,101 @@ const TIME_SLOTS = [
   '1:20 - 2:00',
 ];
 
-// Sample class data
-const sampleClasses = [
-  {
-    day: 'Monday',
-    timeSlot: '8:00 - 8:40',
-    subject: 'Mathematics',
-    teacher: 'Mr. Johnson',
-    room: 'Room 101',
-    grade: '10',
-    division: 'A',
-  },
-  {
-    day: 'Monday',
-    timeSlot: '8:45 - 9:25',
-    subject: 'Science',
-    teacher: 'Ms. Parker',
-    room: 'Lab 3',
-    grade: '10',
-    division: 'A',
-  },
-  {
-    day: 'Monday',
-    timeSlot: '10:30 - 11:10',
-    subject: 'English',
-    teacher: 'Mrs. Williams',
-    room: 'Room 105',
-    grade: '10',
-    division: 'A',
-  },
-  {
-    day: 'Tuesday',
-    timeSlot: '8:00 - 8:40',
-    subject: 'History',
-    teacher: 'Mr. Davis',
-    room: 'Room 201',
-    grade: '10',
-    division: 'A',
-  },
-  {
-    day: 'Wednesday',
-    timeSlot: '1:20 - 2:00',
-    subject: 'Physical Education',
-    teacher: 'Coach Smith',
-    room: 'Gymnasium',
-    grade: '10',
-    division: 'A',
-  },
-];
+// Generate comprehensive class data from school data
+const generateTimetableData = () => {
+  const timetableData = [];
+  
+  // Create a schedule for each grade/division combination
+  const scheduleTemplates = {
+    'Monday': [
+      { timeSlot: '8:00 - 8:40', period: 1 },
+      { timeSlot: '8:45 - 9:25', period: 2 },
+      { timeSlot: '9:30 - 10:10', period: 3 },
+      { timeSlot: '10:30 - 11:10', period: 4 },
+      { timeSlot: '11:15 - 11:55', period: 5 },
+      { timeSlot: '12:00 - 12:40', period: 6 },
+      { timeSlot: '1:20 - 2:00', period: 7 },
+    ],
+    'Tuesday': [
+      { timeSlot: '8:00 - 8:40', period: 1 },
+      { timeSlot: '8:45 - 9:25', period: 2 },
+      { timeSlot: '9:30 - 10:10', period: 3 },
+      { timeSlot: '10:30 - 11:10', period: 4 },
+      { timeSlot: '11:15 - 11:55', period: 5 },
+      { timeSlot: '12:00 - 12:40', period: 6 },
+      { timeSlot: '1:20 - 2:00', period: 7 },
+    ],
+    'Wednesday': [
+      { timeSlot: '8:00 - 8:40', period: 1 },
+      { timeSlot: '8:45 - 9:25', period: 2 },
+      { timeSlot: '9:30 - 10:10', period: 3 },
+      { timeSlot: '10:30 - 11:10', period: 4 },
+      { timeSlot: '11:15 - 11:55', period: 5 },
+      { timeSlot: '12:00 - 12:40', period: 6 },
+      { timeSlot: '1:20 - 2:00', period: 7 },
+    ],
+    'Thursday': [
+      { timeSlot: '8:00 - 8:40', period: 1 },
+      { timeSlot: '8:45 - 9:25', period: 2 },
+      { timeSlot: '9:30 - 10:10', period: 3 },
+      { timeSlot: '10:30 - 11:10', period: 4 },
+      { timeSlot: '11:15 - 11:55', period: 5 },
+      { timeSlot: '12:00 - 12:40', period: 6 },
+      { timeSlot: '1:20 - 2:00', period: 7 },
+    ],
+    'Friday': [
+      { timeSlot: '8:00 - 8:40', period: 1 },
+      { timeSlot: '8:45 - 9:25', period: 2 },
+      { timeSlot: '9:30 - 10:10', period: 3 },
+      { timeSlot: '10:30 - 11:10', period: 4 },
+      { timeSlot: '11:15 - 11:55', period: 5 },
+      { timeSlot: '12:00 - 12:40', period: 6 },
+      { timeSlot: '1:20 - 2:00', period: 7 },
+    ],
+  };
+
+  // Create subject rotation for different days
+  WEEKDAYS.forEach((day, dayIndex) => {
+    const daySchedule = scheduleTemplates[day];
+    
+    daySchedule.forEach((slot, slotIndex) => {
+      // Get subjects for Class 10 from our school data
+      const class10Subjects = subjectAllocationData.filter(s => s.grade === 'Class 10');
+      
+      if (class10Subjects.length > 0) {
+        // Rotate subjects across days and periods
+        const subjectIndex = (dayIndex * 7 + slotIndex) % class10Subjects.length;
+        const subject = class10Subjects[subjectIndex];
+        
+        // Determine room based on subject
+        let room = 'Room 101';
+        if (subject.subject.toLowerCase().includes('science') || subject.subject.toLowerCase().includes('physics') || subject.subject.toLowerCase().includes('chemistry') || subject.subject.toLowerCase().includes('biology')) {
+          room = 'Science Lab';
+        } else if (subject.subject.toLowerCase().includes('computer')) {
+          room = 'Computer Lab 1';
+        } else if (subject.subject.toLowerCase().includes('physical')) {
+          room = 'Gymnasium';
+        } else if (subject.subject.toLowerCase().includes('math')) {
+          room = 'Math Lab';
+        }
+
+        timetableData.push({
+          day: day,
+          timeSlot: slot.timeSlot,
+          subject: subject.subject,
+          teacher: subject.teacher,
+          room: room,
+          grade: '10',
+          division: 'A',
+        });
+      }
+    });
+  });
+
+  return timetableData;
+};
+
+const generatedClasses = generateTimetableData();
 
 interface DailyTimetableProps {
   grade?: string;
@@ -72,7 +120,7 @@ interface DailyTimetableProps {
 }
 
 export function DailyTimetable({ grade = '10', division = 'A' }: DailyTimetableProps) {
-  const filteredClasses = sampleClasses.filter(
+  const filteredClasses = generatedClasses.filter(
     (cls) => cls.grade === grade && cls.division === division
   );
 

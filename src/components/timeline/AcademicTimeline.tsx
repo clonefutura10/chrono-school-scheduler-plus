@@ -15,25 +15,38 @@ interface TimelineEvent {
   status?: "upcoming" | "ongoing" | "completed";
 }
 
-// Convert academic structure and events to timeline format
+// Convert academic structure to timeline format
 const semesterData: TimelineEvent[] = [
-  { id: 1, title: "Term 1 Classes Begin", date: "2025-06-01", category: "academic", status: "completed" },
+  { id: 1, title: "Academic Year Begins", date: academicStructure.academicYear.start, category: "academic", status: "completed" },
+  ...academicStructure.terms.map((term, index) => [
+    {
+      id: index * 2 + 2,
+      title: `${term.name} Begins`,
+      date: term.startDate,
+      category: "academic",
+      status: new Date(term.startDate) < new Date() ? "completed" as const : "upcoming" as const
+    },
+    {
+      id: index * 2 + 3,
+      title: `${term.name} Ends`,
+      date: term.endDate,
+      category: "academic",
+      status: new Date(term.endDate) < new Date() ? "completed" as const : "upcoming" as const
+    }
+  ]).flat(),
   ...academicStructure.examinations.map((exam, index) => ({
-    id: index + 2,
+    id: index + 10,
     title: exam.type,
     date: exam.startDate,
     category: "exam",
     status: new Date(exam.startDate) < new Date() ? "completed" as const : "upcoming" as const
   })),
-  { id: 10, title: "Term 1 Ends", date: "2025-10-15", category: "academic", status: "completed" },
-  { id: 11, title: "Term 2 Classes Begin", date: "2025-11-01", category: "academic", status: "ongoing" },
-  { id: 12, title: "Final Exams", date: "2026-03-01", category: "exam", status: "upcoming" },
-  { id: 13, title: "Result Declaration", date: "2026-03-31", category: "academic", status: "upcoming" },
+  { id: 20, title: "Academic Year Ends", date: academicStructure.academicYear.end, category: "academic", status: "upcoming" },
 ];
 
-// Convert co-curricular events to timeline format
+// Use actual co-curricular events from school data
 const yearlyData: TimelineEvent[] = [
-  { id: 1, title: "Academic Year Begins", date: "2025-06-01", category: "academic", status: "completed" },
+  { id: 1, title: "Academic Year Begins", date: academicStructure.academicYear.start, category: "academic", status: "completed" },
   ...coCurricularEvents.map((event, index) => ({
     id: index + 2,
     title: event.event,
@@ -42,8 +55,7 @@ const yearlyData: TimelineEvent[] = [
     status: new Date(event.date) < new Date() ? "completed" as const : 
            new Date(event.date).getTime() === new Date().getTime() ? "ongoing" as const : "upcoming" as const
   })),
-  { id: 20, title: "Academic Year Ends", date: "2026-03-31", category: "academic", status: "upcoming" },
-  { id: 21, title: "Summer Vacation Begins", date: "2026-04-15", category: "holiday", status: "upcoming" },
+  { id: 50, title: "Academic Year Ends", date: academicStructure.academicYear.end, category: "academic", status: "upcoming" },
 ];
 
 const getCategoryBadge = (category: string) => {
@@ -72,7 +84,7 @@ interface AcademicTimelineProps {
 }
 
 export function AcademicTimeline({ compact = false }: AcademicTimelineProps) {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date("2025-11-15"));
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   
   // Function to group events by date
   const groupEventsByDate = (events: TimelineEvent[]) => {
@@ -107,12 +119,16 @@ export function AcademicTimeline({ compact = false }: AcademicTimelineProps) {
     <Card>
       <CardHeader>
         <CardTitle>Academic Timeline - {academicStructure.theme}</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Academic Year: {academicStructure.academicYear.start} to {academicStructure.academicYear.end} 
+          ({academicStructure.workingDays} working days)
+        </p>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="semester">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="semester">Semester View</TabsTrigger>
-            <TabsTrigger value="yearly">Yearly View</TabsTrigger>
+            <TabsTrigger value="semester">Term Schedule</TabsTrigger>
+            <TabsTrigger value="yearly">Events Calendar</TabsTrigger>
           </TabsList>
           
           <TabsContent value="semester" className="mt-4">
@@ -160,11 +176,22 @@ export function AcademicTimeline({ compact = false }: AcademicTimelineProps) {
                 </div>
                 
                 {!compact && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Badge className="bg-blue-100 text-blue-800">Academic Event</Badge>
-                    <Badge className="bg-red-100 text-red-800">Exam</Badge>
-                    <Badge className="bg-green-100 text-green-800">Competition</Badge>
-                    <Badge className="bg-purple-100 text-purple-800">Celebration</Badge>
+                  <div className="mt-4">
+                    <h4 className="font-medium mb-2">Academic Structure Overview</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Working Days:</span>
+                        <span>{academicStructure.workingDays}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Theme:</span>
+                        <span>{academicStructure.theme}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Terms:</span>
+                        <span>{academicStructure.terms.length}</span>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -219,8 +246,10 @@ export function AcademicTimeline({ compact = false }: AcademicTimelineProps) {
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Badge className="bg-blue-100 text-blue-800">Academic Event</Badge>
                     <Badge className="bg-red-100 text-red-800">Exam</Badge>
-                    <Badge className="bg-green-100 text-green-800">School Event</Badge>
-                    <Badge className="bg-purple-100 text-purple-800">Holiday</Badge>
+                    <Badge className="bg-green-100 text-green-800">Competition</Badge>
+                    <Badge className="bg-purple-100 text-purple-800">Celebration</Badge>
+                    <Badge className="bg-orange-100 text-orange-800">Sports</Badge>
+                    <Badge className="bg-yellow-100 text-yellow-800">Exhibition</Badge>
                   </div>
                 )}
               </div>

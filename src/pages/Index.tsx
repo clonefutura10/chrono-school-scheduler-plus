@@ -14,41 +14,45 @@ import { AttendanceChart } from '@/components/student/AttendanceChart';
 import { UpcomingAssignments } from '@/components/student/UpcomingAssignments';
 import { AcademicTimeline } from '@/components/timeline/AcademicTimeline';
 import { Badge } from '@/components/ui/badge';
-import { academicStructure, coCurricularEvents } from '@/data/schoolData';
+import { academicStructure, coCurricularEvents, studentStrengthData, subjectAllocationData, teacherLoadData } from '@/data/schoolData';
 
 const Index = () => {
-  // Student data based on school setup
+  // Get real data for Class 10-A
+  const currentClass = studentStrengthData.find(s => s.grade === 'Class 10');
+  const class10Subjects = subjectAllocationData.filter(s => s.grade === 'Class 10');
+  
+  // Student data based on actual school setup
   const student = {
     name: "John Smith",
     id: "STU10042",
     grade: "10",
-    division: "A",
+    division: "A", 
     attendance: 92,
     ranking: 5,
     completedAssignments: 28,
     totalAssignments: 32,
-    academicYear: "2025-26",
-    term: "Term 2",
-    classSize: 34,
+    academicYear: `${new Date(academicStructure.academicYear.start).getFullYear()}-${new Date(academicStructure.academicYear.end).getFullYear().toString().slice(-2)}`,
+    term: academicStructure.terms.find(t => new Date() >= new Date(t.startDate) && new Date() <= new Date(t.endDate))?.name || "Term 2",
+    classSize: currentClass?.totalStudents || 68,
     learningProgress: 78
   };
 
-  const academicProgress = [
-    { subject: "Mathematics", progress: 85, teacher: "John Smith", nextTest: "Dec 15" },
-    { subject: "Science", progress: 72, teacher: "Mr. Khan", nextTest: "Dec 12" },
-    { subject: "English", progress: 90, teacher: "Sarah Johnson", nextTest: "Dec 18" },
-    { subject: "History", progress: 65, teacher: "David Wilson", nextTest: "Dec 20" },
-    { subject: "Geography", progress: 78, teacher: "James Wilson", nextTest: "Dec 22" },
-    { subject: "Computer Science", progress: 88, teacher: "Emily Clark", nextTest: "Dec 25" }
-  ];
+  // Academic progress based on real subjects
+  const academicProgress = class10Subjects.map((subject, index) => ({
+    subject: subject.subject,
+    progress: 75 + (index * 5) % 25, // Varying progress
+    teacher: subject.teacher,
+    nextTest: `Dec ${15 + index}`
+  }));
 
   const courseCompletion = [
-    { category: "Semester Progress", progress: 60, total: 100, description: "Overall completion" },
+    { category: "Semester Progress", progress: 60, total: 100, description: `${academicStructure.terms[1]?.name} completion` },
     { category: "Required Reading", progress: 75, total: 100, description: "Books completed" },
     { category: "Lab Activities", progress: 88, total: 100, description: "Practical work" },
     { category: "Project Milestones", progress: 45, total: 100, description: "Project completion" }
   ];
 
+  // Use real upcoming events
   const upcomingEvents = coCurricularEvents
     .filter(event => new Date(event.date) >= new Date())
     .slice(0, 4);
@@ -56,8 +60,8 @@ const Index = () => {
   const classInfo = {
     totalStudents: student.classSize,
     division: student.division,
-    classTeacher: "Sarah Johnson",
-    subjects: academicProgress.length
+    classTeacher: class10Subjects.find(s => s.subject === 'English')?.teacher || "Sarah Johnson",
+    subjects: class10Subjects.length
   };
 
   return (
@@ -68,6 +72,9 @@ const Index = () => {
             <h2 className="text-3xl font-bold tracking-tight">Student Dashboard</h2>
             <p className="text-muted-foreground">
               Welcome back, {student.name}. Academic Year {student.academicYear} - {student.term}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Theme: {academicStructure.theme} • Working Days: {academicStructure.workingDays}
             </p>
           </div>
           <div className="flex gap-2">
@@ -133,6 +140,10 @@ const Index = () => {
                 <span className="text-sm font-medium">Subjects</span>
                 <span className="text-sm">{classInfo.subjects}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Ideal Class Size</span>
+                <span className="text-sm">{currentClass?.idealClassSize}</span>
+              </div>
             </CardContent>
           </Card>
           
@@ -157,6 +168,10 @@ const Index = () => {
                 <span className="text-sm font-medium">Status</span>
                 <Badge className="bg-green-100 text-green-800">Active</Badge>
               </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium">Working Days</span>
+                <span className="text-sm">{academicStructure.workingDays}</span>
+              </div>
             </CardContent>
           </Card>
           
@@ -169,7 +184,10 @@ const Index = () => {
                 {upcomingEvents.slice(0, 3).map((event, index) => (
                   <div key={index} className="text-sm">
                     <div className="font-medium">{event.event}</div>
-                    <div className="text-muted-foreground text-xs">{event.date}</div>
+                    <div className="text-muted-foreground text-xs flex justify-between">
+                      <span>{event.date}</span>
+                      <Badge className="text-xs" variant="outline">{event.type}</Badge>
+                    </div>
                   </div>
                 ))}
               </div>
