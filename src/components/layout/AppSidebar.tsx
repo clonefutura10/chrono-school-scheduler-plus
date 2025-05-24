@@ -20,13 +20,12 @@ import {
   Settings, 
   BookOpen,
   GraduationCap,
-  Users,
   Clock
 } from 'lucide-react';
 
 const navItems = [
   { 
-    label: 'Student Portal',
+    label: 'Student',
     href: '/', 
     icon: <Home className="h-5 w-5" />,
     roles: ['admin', 'teacher', 'student'] 
@@ -44,33 +43,15 @@ const navItems = [
     roles: ['student', 'teacher'] 
   },
   { 
-    label: 'Teacher Portal',
+    label: 'Teacher',
     href: '/teacher', 
     icon: <User className="h-5 w-5" />,
     roles: ['teacher', 'admin'] 
   },
   { 
-    label: 'Admin Portal',
+    label: 'Admin',
     href: '/admin', 
     icon: <Settings className="h-5 w-5" />,
-    roles: ['admin'] 
-  },
-  { 
-    label: 'Class Management',
-    href: '/classes', 
-    icon: <GraduationCap className="h-5 w-5" />,
-    roles: ['admin'] 
-  },
-  { 
-    label: 'Teacher Management',
-    href: '/teachers', 
-    icon: <User className="h-5 w-5" />,
-    roles: ['admin'] 
-  },
-  { 
-    label: 'Student Management',
-    href: '/students', 
-    icon: <Users className="h-5 w-5" />,
     roles: ['admin'] 
   },
   { 
@@ -91,26 +72,29 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-4 py-2">
-          <div className="w-8 h-8 rounded-full bg-school-500 flex items-center justify-center">
-            <span className="text-white font-bold">ST</span>
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+            <GraduationCap className="text-white h-5 w-5" />
           </div>
           <div>
-            <p className="font-poppins font-semibold text-school-900">School Timetable</p>
+            <p className="font-poppins font-bold text-lg text-gray-900">School Portal</p>
+            <p className="text-xs text-gray-500">Academic Management</p>
           </div>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sm font-semibold text-gray-600">Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {filteredItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild isActive={location.pathname === item.href}>
-                    <Link to={item.href} className="flex items-center gap-3">
-                      {item.icon}
-                      <span>{item.label}</span>
+                    <Link to={item.href} className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 hover:bg-gray-100 hover:shadow-sm">
+                      <div className={`p-1.5 rounded-md ${location.pathname === item.href ? 'bg-blue-100 text-blue-600' : 'text-gray-500'}`}>
+                        {item.icon}
+                      </div>
+                      <span className={`font-medium ${location.pathname === item.href ? 'text-blue-600' : 'text-gray-700'}`}>{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -120,8 +104,10 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <div className="px-4 py-2 text-xs text-gray-500">
-          v1.0.0 &copy; 2025 CloneFutura
+        <div className="px-4 py-3 border-t border-gray-200">
+          <div className="text-xs text-gray-400 text-center">
+            v2.0.0 &copy; 2025 School Management
+          </div>
         </div>
       </SidebarFooter>
     </Sidebar>

@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import StudentManagement from "./pages/StudentManagement";
 import TeacherManagement from "./pages/TeacherManagement";
 import AttendanceManagement from "./pages/AttendanceManagement";
+import AttendancePage from "./pages/AttendancePage";
 import ReportsPage from "./pages/ReportsPage";
 import StudentSchedule from "./pages/StudentSchedule";
 import AssignmentsPage from "./pages/AssignmentsPage";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/schedule" element={<StudentSchedule />} />
           <Route path="/assignments" element={<AssignmentsPage />} />
+          <Route path="/attendance" element={<AttendancePage />} />
           <Route path="/classes" element={<ClassesPage />} />
           <Route path="/teacher" element={<TeacherDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
