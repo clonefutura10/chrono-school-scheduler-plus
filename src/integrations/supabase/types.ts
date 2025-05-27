@@ -9,47 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      availability: {
-        Row: {
-          created_at: string
-          day_of_week: string
-          end_time: string
-          id: string
-          is_available: boolean
-          start_time: string
-          teacher_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          day_of_week: string
-          end_time?: string
-          id?: string
-          is_available?: boolean
-          start_time?: string
-          teacher_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          day_of_week?: string
-          end_time?: string
-          id?: string
-          is_available?: boolean
-          start_time?: string
-          teacher_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "availability_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "teachers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       classes: {
         Row: {
           capacity: number | null
@@ -57,8 +16,6 @@ export type Database = {
           grade: string | null
           id: string
           name: string
-          periods_per_day: number | null
-          periods_per_week: number | null
           room_number: string | null
           school_id: string | null
           section: string | null
@@ -70,8 +27,6 @@ export type Database = {
           grade?: string | null
           id?: string
           name: string
-          periods_per_day?: number | null
-          periods_per_week?: number | null
           room_number?: string | null
           school_id?: string | null
           section?: string | null
@@ -83,8 +38,6 @@ export type Database = {
           grade?: string | null
           id?: string
           name?: string
-          periods_per_day?: number | null
-          periods_per_week?: number | null
           room_number?: string | null
           school_id?: string | null
           section?: string | null
@@ -286,7 +239,6 @@ export type Database = {
       }
       teachers: {
         Row: {
-          availability_notes: string | null
           created_at: string
           department: string | null
           email: string | null
@@ -294,9 +246,7 @@ export type Database = {
           first_name: string
           id: string
           last_name: string
-          max_hours_per_day: number | null
           phone: string | null
-          preferences: string | null
           qualification: string | null
           school_id: string | null
           subjects: Json | null
@@ -304,7 +254,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          availability_notes?: string | null
           created_at?: string
           department?: string | null
           email?: string | null
@@ -312,9 +261,7 @@ export type Database = {
           first_name: string
           id?: string
           last_name: string
-          max_hours_per_day?: number | null
           phone?: string | null
-          preferences?: string | null
           qualification?: string | null
           school_id?: string | null
           subjects?: Json | null
@@ -322,7 +269,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          availability_notes?: string | null
           created_at?: string
           department?: string | null
           email?: string | null
@@ -330,9 +276,7 @@ export type Database = {
           first_name?: string
           id?: string
           last_name?: string
-          max_hours_per_day?: number | null
           phone?: string | null
-          preferences?: string | null
           qualification?: string | null
           school_id?: string | null
           subjects?: Json | null
@@ -383,87 +327,6 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      timetables: {
-        Row: {
-          class_id: string | null
-          created_at: string
-          day_of_week: string
-          id: string
-          period_number: number
-          room_number: string | null
-          schedule_data: Json | null
-          school_id: string | null
-          subject_id: string | null
-          teacher_id: string | null
-          time_slot_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          class_id?: string | null
-          created_at?: string
-          day_of_week: string
-          id?: string
-          period_number: number
-          room_number?: string | null
-          schedule_data?: Json | null
-          school_id?: string | null
-          subject_id?: string | null
-          teacher_id?: string | null
-          time_slot_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          class_id?: string | null
-          created_at?: string
-          day_of_week?: string
-          id?: string
-          period_number?: number
-          room_number?: string | null
-          schedule_data?: Json | null
-          school_id?: string | null
-          subject_id?: string | null
-          teacher_id?: string | null
-          time_slot_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "timetables_class_id_fkey"
-            columns: ["class_id"]
-            isOneToOne: false
-            referencedRelation: "classes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "timetables_school_id_fkey"
-            columns: ["school_id"]
-            isOneToOne: false
-            referencedRelation: "schools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "timetables_subject_id_fkey"
-            columns: ["subject_id"]
-            isOneToOne: false
-            referencedRelation: "subjects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "timetables_teacher_id_fkey"
-            columns: ["teacher_id"]
-            isOneToOne: false
-            referencedRelation: "teachers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "timetables_time_slot_id_fkey"
-            columns: ["time_slot_id"]
-            isOneToOne: false
-            referencedRelation: "time_slots"
             referencedColumns: ["id"]
           },
         ]
