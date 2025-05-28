@@ -13,140 +13,137 @@ import { AttendanceChart } from '@/components/student/AttendanceChart';
 import { UpcomingAssignments } from '@/components/student/UpcomingAssignments';
 import { AcademicTimeline } from '@/components/timeline/AcademicTimeline';
 import { Badge } from '@/components/ui/badge';
-import { academicStructure, coCurricularEvents } from '@/data/schoolData';
-import { supabase } from '@/integrations/supabase/client';
+import { SchoolDataService } from '@/services/schoolDataService';
+import type { School, StudentWithClass } from '@/types/database';
 
 const Index = () => {
-  const [studentData, setStudentData] = useState(null);
-  const [classData, setClassData] = useState(null);
+  const [schoolData, setSchoolData] = useState<School | null>(null);
+  const [studentData, setStudentData] = useState<any>(null);
+  const [classData, setClassData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  // Generate dynamic mock data that changes on refresh
-  const generateDynamicStudentData = () => {
-    const names = ["John Smith", "Emma Wilson", "Michael Brown", "Sophia Davis", "Ryan Johnson"];
-    const grades = ["9", "10", "11"];
-    const divisions = ["A", "B", "C"];
-    
-    const randomName = names[Math.floor(Math.random() * names.length)];
-    const randomGrade = grades[Math.floor(Math.random() * grades.length)];
-    const randomDivision = divisions[Math.floor(Math.random() * divisions.length)];
-    const randomAttendance = Math.floor(Math.random() * 15) + 85; // 85-100%
-    const randomRanking = Math.floor(Math.random() * 10) + 1; // 1-10
-    const randomCompleted = Math.floor(Math.random() * 5) + 25; // 25-30
-    const randomTotal = randomCompleted + Math.floor(Math.random() * 5) + 2; // Total assignments
-    
-    return {
-      name: randomName,
-      id: `STU${randomGrade}0${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`,
-      grade: randomGrade,
-      division: randomDivision,
-      attendance: randomAttendance,
-      ranking: randomRanking,
-      completedAssignments: randomCompleted,
-      totalAssignments: randomTotal,
-      academicYear: `${new Date(academicStructure.academicYear.start).getFullYear()}-${new Date(academicStructure.academicYear.end).getFullYear().toString().slice(-2)}`,
-      term: academicStructure.terms.find(t => new Date() >= new Date(t.startDate) && new Date() <= new Date(t.endDate))?.name || "Term 2",
-      classSize: Math.floor(Math.random() * 20) + 30, // 30-50 students
-      learningProgress: Math.floor(Math.random() * 25) + 70 // 70-95%
-    };
-  };
+  const [realDataAvailable, setRealDataAvailable] = useState(false);
 
   useEffect(() => {
-    fetchStudentDataFromSupabase();
+    fetchRealSchoolData();
+    
+    // Set up real-time subscriptions
+    const unsubscribe = SchoolDataService.setupRealtimeSubscriptions({
+      onStudentChange: (payload) => {
+        console.log('Student data changed:', payload);
+        fetchRealSchoolData(); // Refresh data when changes occur
+      },
+      onSchoolChange: (payload) => {
+        console.log('School data changed:', payload);
+        fetchRealSchoolData();
+      }
+    });
+
+    return unsubscribe;
   }, []);
 
-  const fetchStudentDataFromSupabase = async () => {
+  const fetchRealSchoolData = async () => {
     try {
       setLoading(true);
 
-      // Try to fetch real student data
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('students')
-        .select('*')
-        .limit(1);
+      // Fetch school information
+      const school = await SchoolDataService.getSchoolInfo();
+      console.log('Fetched school data:', school);
 
-      // Try to fetch class data
-      const { data: classesData, error: classesError } = await supabase
-        .from('classes')
-        .select(`
-          *,
-          teachers(first_name, last_name)
-        `)
-        .limit(1);
+      // Fetch first student for demo (in real app, this would be based on logged-in user)
+      const students = await SchoolDataService.getAllStudents();
+      console.log('Fetched students:', students);
 
-      if (studentsError) {
-        console.error('Error fetching students:', studentsError);
-      }
+      // Fetch classes for context
+      const classes = await SchoolDataService.getAllClasses();
+      console.log('Fetched classes:', classes);
 
-      if (classesError) {
-        console.error('Error fetching classes:', classesError);
-      }
+      if (school && students.length > 0) {
+        setRealDataAvailable(true);
+        setSchoolData(school);
 
-      // Use real data if available, otherwise use dynamic mock data
-      let processedStudentData;
-      let processedClassData;
+        // Use first student as demo student
+        const demoStudent = students[0];
+        const studentClass = classes.find(c => c.id === demoStudent.assigned_class_id);
 
-      if (studentsData && studentsData.length > 0) {
-        const student = studentsData[0];
-        processedStudentData = {
-          name: `${student.first_name} ${student.last_name}`,
-          id: student.student_id,
-          grade: student.grade?.replace('Class ', '') || "10",
-          division: student.section || "A",
-          attendance: Math.floor(Math.random() * 15) + 85,
+        const processedStudentData = {
+          name: `${demoStudent.first_name} ${demoStudent.last_name}`,
+          id: demoStudent.student_id,
+          grade: demoStudent.grade || "10",
+          division: demoStudent.section || "A",
+          attendance: Math.floor(Math.random() * 15) + 85, // Mock attendance for now
           ranking: Math.floor(Math.random() * 10) + 1,
           completedAssignments: Math.floor(Math.random() * 5) + 25,
           totalAssignments: Math.floor(Math.random() * 8) + 30,
-          academicYear: `${new Date().getFullYear()}-${(new Date().getFullYear() + 1).toString().slice(-2)}`,
-          term: "Term 2",
-          classSize: Math.floor(Math.random() * 20) + 30,
+          academicYear: school.academic_year || `${new Date().getFullYear()}-${(new Date().getFullYear() + 1).toString().slice(-2)}`,
+          term: "Term 2", // Will be calculated from academic calendar later
+          classSize: studentClass?.actual_enrollment || Math.floor(Math.random() * 20) + 30,
           learningProgress: Math.floor(Math.random() * 25) + 70
         };
-      } else {
-        processedStudentData = generateDynamicStudentData();
-      }
 
-      if (classesData && classesData.length > 0) {
-        const classInfo = classesData[0];
-        processedClassData = {
-          totalStudents: classInfo.capacity || processedStudentData.classSize,
-          division: processedStudentData.division,
-          classTeacher: classInfo.teachers ? `${classInfo.teachers.first_name} ${classInfo.teachers.last_name}` : "Sarah Johnson",
-          subjects: Math.floor(Math.random() * 3) + 8 // 8-10 subjects
+        const processedClassData = {
+          totalStudents: studentClass?.actual_enrollment || 35,
+          division: demoStudent.section || "A",
+          classTeacher: studentClass?.teachers ? `${studentClass.teachers.first_name} ${studentClass.teachers.last_name}` : "TBD",
+          subjects: 9, // Will fetch from subjects table later
+          className: studentClass?.name || `Class ${demoStudent.grade}-${demoStudent.section}`
         };
-      } else {
-        processedClassData = {
-          totalStudents: processedStudentData.classSize,
-          division: processedStudentData.division,
-          classTeacher: "Sarah Johnson",
-          subjects: 9
-        };
-      }
 
-      setStudentData(processedStudentData);
-      setClassData(processedClassData);
+        setStudentData(processedStudentData);
+        setClassData(processedClassData);
+      } else {
+        // Fallback to dynamic mock data
+        console.log('Using mock data as fallback');
+        setRealDataAvailable(false);
+        generateFallbackData();
+      }
 
     } catch (error) {
-      console.error('Error fetching data:', error);
-      // Fallback to dynamic mock data
-      const mockStudent = generateDynamicStudentData();
-      setStudentData(mockStudent);
-      setClassData({
-        totalStudents: mockStudent.classSize,
-        division: mockStudent.division,
-        classTeacher: "Sarah Johnson",
-        subjects: 9
-      });
+      console.error('Error fetching school data:', error);
+      setRealDataAvailable(false);
+      generateFallbackData();
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading || !studentData || !classData) {
+  const generateFallbackData = () => {
+    // Generate dynamic mock data that changes on refresh
+    const mockStudentData = SchoolDataService.generateMockStudentData();
+    
+    const mockSchoolData = {
+      name: "Demo High School",
+      academic_year: `${new Date().getFullYear()}-${(new Date().getFullYear() + 1).toString().slice(-2)}`,
+      school_vision: "Innovation & Excellence in Education",
+      working_days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      number_of_terms: 3
+    };
+
+    setStudentData({
+      ...mockStudentData,
+      academicYear: mockSchoolData.academic_year,
+      term: "Term 2"
+    });
+
+    setClassData({
+      totalStudents: mockStudentData.classSize,
+      division: mockStudentData.division,
+      classTeacher: "Sarah Johnson",
+      subjects: 9
+    });
+
+    setSchoolData(mockSchoolData as School);
+  };
+
+  if (loading || !studentData || !classData || !schoolData) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-muted-foreground">Loading student dashboard...</div>
+          <div className="text-center">
+            <div className="text-muted-foreground mb-2">Loading school data...</div>
+            <div className="text-sm text-muted-foreground">
+              {realDataAvailable ? 'Connected to database' : 'Preparing demo data'}
+            </div>
+          </div>
         </div>
       </AppLayout>
     );
@@ -170,9 +167,13 @@ const Index = () => {
     { category: "Project Milestones", progress: Math.floor(Math.random() * 30) + 40, total: 100, description: "Project completion" }
   ];
 
-  const upcomingEvents = coCurricularEvents
-    .filter(event => new Date(event.date) >= new Date())
-    .slice(0, 4);
+  // Mock upcoming events for now
+  const upcomingEvents = [
+    { event: "Science Fair", date: "2025-01-15", type: "Academic" },
+    { event: "Sports Day", date: "2025-01-20", type: "Sports" },
+    { event: "Parent Meeting", date: "2025-01-25", type: "Meeting" },
+    { event: "Cultural Program", date: "2025-02-01", type: "Cultural" }
+  ];
 
   return (
     <AppLayout>
@@ -184,8 +185,18 @@ const Index = () => {
               Welcome back, {studentData.name}. Academic Year {studentData.academicYear} - {studentData.term}
             </p>
             <p className="text-sm text-muted-foreground">
-              Theme: {academicStructure.theme} • Working Days: {academicStructure.workingDays}
+              {schoolData.name} • Vision: {schoolData.school_vision || 'Excellence in Education'} • Working Days: {schoolData.working_days?.length || 5}
             </p>
+            {realDataAvailable && (
+              <Badge className="mt-1 bg-green-100 text-green-800">
+                ✅ Live Database Connected
+              </Badge>
+            )}
+            {!realDataAvailable && (
+              <Badge className="mt-1 bg-blue-100 text-blue-800">
+                🔄 Demo Mode - Data refreshes on reload
+              </Badge>
+            )}
           </div>
           <div className="flex gap-2">
             <Button variant="outline">
@@ -251,8 +262,8 @@ const Index = () => {
                 <span className="text-sm">{classData.subjects}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm font-medium">Ideal Class Size</span>
-                <span className="text-sm">{classData.totalStudents}</span>
+                <span className="text-sm font-medium">School</span>
+                <span className="text-sm">{schoolData.name}</span>
               </div>
             </CardContent>
           </Card>
@@ -280,7 +291,7 @@ const Index = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-sm font-medium">Working Days</span>
-                <span className="text-sm">{academicStructure.workingDays}</span>
+                <span className="text-sm">{schoolData.working_days?.length || 5}/week</span>
               </div>
             </CardContent>
           </Card>

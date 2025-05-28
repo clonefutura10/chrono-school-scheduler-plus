@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { RequestForm } from '@/components/requests/RequestForm';
@@ -7,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Users, Clock, Target } from 'lucide-react';
-import { coCurricularEvents } from '@/data/schoolData';
-import { supabase } from '@/integrations/supabase/client';
+import { SchoolDataService } from '@/services/schoolDataService';
+import type { TeacherWithAssignments } from '@/types/database';
 
 interface TeacherProfile {
   name: string;
@@ -20,116 +21,129 @@ interface TeacherProfile {
     day: string;
     periods: string[];
   }>;
+  department: string;
+  totalStudents: number;
+  assignedClasses: string[];
 }
 
 const TeacherDashboard = () => {
   const [teacherProfile, setTeacherProfile] = useState<TeacherProfile | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Generate dynamic mock teacher data
-  const generateMockTeacherProfile = (): TeacherProfile => {
-    const names = ["Sarah Johnson", "Michael Chen", "Emily Wilson", "David Brown", "Lisa Anderson"];
-    const subjectSets = [
-      ["English", "Literature"],
-      ["Mathematics", "Statistics"],
-      ["Physics", "Chemistry"],
-      ["Biology", "Environmental Science"],
-      ["History", "Geography"]
-    ];
-    const gradeSets = [
-      ["Class 9", "Class 10"],
-      ["Class 10", "Class 11"],
-      ["Class 11", "Class 12"],
-      ["Class 8", "Class 9"],
-      ["Class 6", "Class 7"]
-    ];
-
-    const randomIndex = Math.floor(Math.random() * names.length);
-    const randomClasses = Math.floor(Math.random() * 10) + 15; // 15-25 classes
-    
-    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-    const schedule = days.map(day => ({
-      day,
-      periods: Array.from({length: Math.floor(Math.random() * 3) + 3}, (_, i) => 
-        `${Math.floor(Math.random() * 3) + 9}-${String.fromCharCode(65 + Math.floor(Math.random() * 3))} ${subjectSets[randomIndex][0]}`
-      )
-    }));
-
-    return {
-      name: names[randomIndex],
-      subjects: subjectSets[randomIndex],
-      grades: gradeSets[randomIndex],
-      totalClasses: randomClasses,
-      maxCapacity: 30,
-      schedule
-    };
-  };
+  const [realDataAvailable, setRealDataAvailable] = useState(false);
 
   useEffect(() => {
     fetchTeacherData();
+    
+    // Set up real-time subscriptions
+    const unsubscribe = SchoolDataService.setupRealtimeSubscriptions({
+      onTeacherChange: () => fetchTeacherData()
+    });
+
+    return unsubscribe;
   }, []);
 
   const fetchTeacherData = async () => {
     try {
       setLoading(true);
 
-      // Fetch teacher data from Supabase
-      const { data: teachersData, error } = await supabase
-        .from('teachers')
-        .select('*')
-        .limit(1);
+      // Fetch teachers from database
+      const teachers = await SchoolDataService.getAllTeachers();
+      console.log('Teacher Dashboard - Fetched teachers:', teachers);
 
-      if (error) {
-        console.error('Error fetching teachers:', error);
-      }
+      if (teachers.length > 0) {
+        setRealDataAvailable(true);
+        
+        // Use first teacher as demo teacher (in real app, this would be based on logged-in user)
+        const teacher = teachers[0];
+        
+        // Get teacher with assignments
+        const teacherWithAssignments = await SchoolDataService.getTeacherById(teacher.id);
+        
+        if (teacherWithAssignments) {
+          const assignments = teacherWithAssignments.teacher_subject_mappings || [];
+          
+          // Calculate total classes and students
+          const totalClasses = assignments.reduce((sum, assignment) => sum + assignment.periods_per_week, 0);
+          const totalStudents = assignments.reduce((sum, assignment) => {
+            return sum + (assignment.classes?.actual_enrollment || 0);
+          }, 0);
 
-      let processedTeacherProfile: TeacherProfile;
+          // Extract unique subjects and classes
+          const subjects = Array.from(new Set(assignments.map(a => a.subjects?.name).filter(Boolean))) as string[];
+          const assignedClasses = Array.from(new Set(assignments.map(a => 
+            a.classes ? `${a.classes.grade}-${a.classes.section}` : ''
+          ).filter(Boolean)));
 
-      if (teachersData && teachersData.length > 0) {
-        const teacher = teachersData[0];
-        const subjects = Array.isArray(teacher.subjects) 
-          ? teacher.subjects as string[]
-          : typeof teacher.subjects === 'string'
-          ? [teacher.subjects]
-          : ["English"];
+          // Generate realistic schedule
+          const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+          const schedule = days.map(day => ({
+            day,
+            periods: assignments.slice(0, Math.floor(Math.random() * 3) + 3).map((assignment, i) => 
+              `${Math.floor(Math.random() * 3) + 9}-${assignment.classes?.section || 'A'} ${assignment.subjects?.name || 'Subject'}`
+            )
+          }));
 
-        // Generate realistic schedule
-        const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-        const schedule = days.map(day => ({
-          day,
-          periods: Array.from({length: Math.floor(Math.random() * 3) + 3}, (_, i) => 
-            `${Math.floor(Math.random() * 3) + 9}-${String.fromCharCode(65 + i)} ${subjects[0]}`
-          )
-        }));
+          const processedTeacherProfile: TeacherProfile = {
+            name: `${teacher.first_name} ${teacher.last_name}`,
+            subjects: subjects.length > 0 ? subjects : (teacher.subjects as string[] || ["General"]),
+            grades: assignedClasses.length > 0 ? assignedClasses : ["Class 9", "Class 10"],
+            totalClasses,
+            maxCapacity: teacher.max_periods_per_day * 5, // Weekly capacity
+            schedule,
+            department: teacher.department || "General",
+            totalStudents,
+            assignedClasses
+          };
 
-        processedTeacherProfile = {
-          name: `${teacher.first_name} ${teacher.last_name}`,
-          subjects,
-          grades: ["Class 9", "Class 10"], // Default grades
-          totalClasses: Math.floor(Math.random() * 10) + 15,
-          maxCapacity: teacher.max_hours_per_day || 30,
-          schedule
-        };
+          setTeacherProfile(processedTeacherProfile);
+        }
       } else {
-        // Use dynamic mock data
-        processedTeacherProfile = generateMockTeacherProfile();
+        // Fallback to dynamic mock data
+        setRealDataAvailable(false);
+        const mockProfile = generateMockTeacherProfile();
+        setTeacherProfile(mockProfile);
       }
-
-      setTeacherProfile(processedTeacherProfile);
 
     } catch (error) {
       console.error('Error fetching teacher data:', error);
-      setTeacherProfile(generateMockTeacherProfile());
+      setRealDataAvailable(false);
+      const mockProfile = generateMockTeacherProfile();
+      setTeacherProfile(mockProfile);
     } finally {
       setLoading(false);
     }
+  };
+
+  const generateMockTeacherProfile = (): TeacherProfile => {
+    const mockData = SchoolDataService.generateMockTeacherData();
+    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+    const schedule = days.map(day => ({
+      day,
+      periods: Array.from({length: Math.floor(Math.random() * 3) + 3}, (_, i) => 
+        `${Math.floor(Math.random() * 3) + 9}-${String.fromCharCode(65 + i)} ${mockData.subjects[0]}`
+      )
+    }));
+
+    return {
+      ...mockData,
+      grades: ["Class 9", "Class 10"],
+      schedule,
+      department: "Science",
+      totalStudents: Math.floor(Math.random() * 50) + 100,
+      assignedClasses: ["9-A", "9-B", "10-A"]
+    };
   };
 
   if (loading || !teacherProfile) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-muted-foreground">Loading teacher dashboard...</div>
+          <div className="text-center">
+            <div className="text-muted-foreground mb-2">Loading teacher dashboard...</div>
+            <div className="text-sm text-muted-foreground">
+              {realDataAvailable ? 'Connected to database' : 'Preparing demo data'}
+            </div>
+          </div>
         </div>
       </AppLayout>
     );
@@ -138,24 +152,25 @@ const TeacherDashboard = () => {
   const workloadPercentage = (teacherProfile.totalClasses / teacherProfile.maxCapacity) * 100;
   
   // Generate dynamic student progress data
-  const studentProgress = [
-    { class: "9-A", totalStudents: Math.floor(Math.random() * 10) + 30, assignments: { submitted: Math.floor(Math.random() * 5) + 28, pending: Math.floor(Math.random() * 5) + 2 }, avgScore: Math.floor(Math.random() * 15) + 75 },
-    { class: "9-B", totalStudents: Math.floor(Math.random() * 10) + 30, assignments: { submitted: Math.floor(Math.random() * 5) + 28, pending: Math.floor(Math.random() * 5) + 2 }, avgScore: Math.floor(Math.random() * 15) + 75 },
-    { class: "10-A", totalStudents: Math.floor(Math.random() * 10) + 30, assignments: { submitted: Math.floor(Math.random() * 5) + 28, pending: Math.floor(Math.random() * 5) + 2 }, avgScore: Math.floor(Math.random() * 15) + 75 },
-    { class: "10-B", totalStudents: Math.floor(Math.random() * 10) + 30, assignments: { submitted: Math.floor(Math.random() * 5) + 28, pending: Math.floor(Math.random() * 5) + 2 }, avgScore: Math.floor(Math.random() * 15) + 75 }
-  ];
+  const studentProgress = teacherProfile.assignedClasses.map(className => ({
+    class: className,
+    totalStudents: Math.floor(Math.random() * 10) + 30,
+    assignments: { 
+      submitted: Math.floor(Math.random() * 5) + 28, 
+      pending: Math.floor(Math.random() * 5) + 2 
+    },
+    avgScore: Math.floor(Math.random() * 15) + 75
+  }));
 
-  const totalStudents = studentProgress.reduce((sum, cls) => sum + cls.totalStudents, 0);
   const avgPerformance = Math.round(studentProgress.reduce((sum, cls) => sum + cls.avgScore, 0) / studentProgress.length);
 
-  const upcomingEvents = coCurricularEvents
-    .filter(event => new Date(event.date) >= new Date())
-    .slice(0, 4)
-    .map(event => ({
-      event: event.event,
-      date: event.date,
-      type: event.type
-    }));
+  // Mock upcoming events
+  const upcomingEvents = [
+    { event: "Staff Meeting", date: "2025-01-15", type: "Meeting" },
+    { event: "Parent Conference", date: "2025-01-20", type: "Conference" },
+    { event: "Grade Submission", date: "2025-01-25", type: "Academic" },
+    { event: "Department Review", date: "2025-02-01", type: "Review" }
+  ];
 
   return (
     <AppLayout>
@@ -165,18 +180,31 @@ const TeacherDashboard = () => {
           <p className="text-muted-foreground">
             Welcome back, {teacherProfile.name}. Manage your classes and track student progress.
           </p>
+          <p className="text-sm text-muted-foreground">
+            Department: {teacherProfile.department} • Subjects: {teacherProfile.subjects.join(', ')}
+          </p>
+          {realDataAvailable && (
+            <Badge className="mt-1 bg-green-100 text-green-800">
+              ✅ Live Database Connected
+            </Badge>
+          )}
+          {!realDataAvailable && (
+            <Badge className="mt-1 bg-blue-100 text-blue-800">
+              🔄 Demo Mode - Data refreshes on reload
+            </Badge>
+          )}
         </div>
         
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatsCard
-            title="Total Classes"
+            title="Weekly Classes"
             value={`${teacherProfile.totalClasses}`}
             description={`${teacherProfile.maxCapacity - teacherProfile.totalClasses} slots available`}
             icon={<BookOpen className="h-4 w-4" />}
           />
           <StatsCard
             title="Students"
-            value={totalStudents.toString()}
+            value={teacherProfile.totalStudents.toString()}
             description="Across all classes"
             icon={<Users className="h-4 w-4" />}
           />
@@ -211,7 +239,7 @@ const TeacherDashboard = () => {
                 <CardContent className="space-y-4">
                   <div>
                     <h4 className="text-sm font-medium mb-2">Subjects</h4>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       {teacherProfile.subjects.map((subject, index) => (
                         <Badge key={index} variant="outline">{subject}</Badge>
                       ))}
@@ -219,9 +247,9 @@ const TeacherDashboard = () => {
                   </div>
                   
                   <div>
-                    <h4 className="text-sm font-medium mb-2">Grades</h4>
-                    <div className="flex gap-2">
-                      {teacherProfile.grades.map((grade, index) => (
+                    <h4 className="text-sm font-medium mb-2">Assigned Classes</h4>
+                    <div className="flex gap-2 flex-wrap">
+                      {teacherProfile.assignedClasses.map((grade, index) => (
                         <Badge key={index} variant="outline">{grade}</Badge>
                       ))}
                     </div>
@@ -229,10 +257,15 @@ const TeacherDashboard = () => {
                   
                   <div>
                     <h4 className="text-sm font-medium mb-2">Weekly Load</h4>
-                    <div className="text-2xl font-bold">{teacherProfile.totalClasses} classes</div>
+                    <div className="text-2xl font-bold">{teacherProfile.totalClasses} periods</div>
                     <div className="text-sm text-muted-foreground">
-                      {teacherProfile.maxCapacity - teacherProfile.totalClasses} slots available
+                      {teacherProfile.maxCapacity - teacherProfile.totalClasses} periods available
                     </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-medium mb-2">Department</h4>
+                    <Badge variant="outline">{teacherProfile.department}</Badge>
                   </div>
                 </CardContent>
               </Card>
@@ -266,7 +299,7 @@ const TeacherDashboard = () => {
                   {studentProgress.map((classData, index) => (
                     <div key={index} className="p-4 border rounded-lg">
                       <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium">{classData.class}</h4>
+                        <h4 className="font-medium">Class {classData.class}</h4>
                         <Badge variant="outline">{classData.totalStudents} students</Badge>
                       </div>
                       <div className="grid grid-cols-3 gap-4 text-sm">
