@@ -1,12 +1,82 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
 import { teacherLoadData, subjectAllocationData } from '@/data/schoolData';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Teacher {
+  name: string;
+  subjects: string[];
+  totalClasses: number;
+  maxCapacity: number;
+}
 
 export function TeacherLoadSummary() {
+  const [teachers, setTeachers] = useState<Teacher[]>(teacherLoadData);
+  const [allocations, setAllocations] = useState(subjectAllocationData);
+
+  useEffect(() => {
+    fetchTeachers();
+    fetchAllocations();
+  }, []);
+
+  const fetchTeachers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('teachers')
+        .select('*');
+
+      if (error) {
+        console.error('Error fetching teachers:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const formattedTeachers: Teacher[] = data.map(teacher => ({
+          name: `${teacher.first_name} ${teacher.last_name}`,
+          subjects: Array.isArray(teacher.subjects) 
+            ? teacher.subjects as string[]
+            : typeof teacher.subjects === 'string'
+            ? [teacher.subjects]
+            : [],
+          totalClasses: 20, // Default value, would need to calculate from timetable
+          maxCapacity: teacher.max_hours_per_day || 30
+        }));
+        setTeachers(formattedTeachers);
+      }
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+    }
+  };
+
+  const fetchAllocations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('timetables')
+        .select(`
+          *,
+          classes(grade, section),
+          subjects(name),
+          teachers(first_name, last_name)
+        `);
+
+      if (error) {
+        console.error('Error fetching allocations:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        // Process the data to match the expected format
+        // For now, keeping the existing static data structure
+        console.log('Fetched timetable data:', data);
+      }
+    } catch (error) {
+      console.error('Error fetching allocations:', error);
+    }
+  };
+
   const getLoadStatus = (current: number, max: number) => {
     const percentage = (current / max) * 100;
     if (percentage > 90) return { status: 'overloaded', color: 'bg-red-500', icon: AlertTriangle };
@@ -22,7 +92,7 @@ export function TeacherLoadSummary() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {teacherLoadData.map((teacher, index) => {
+            {teachers.map((teacher, index) => {
               const loadStatus = getLoadStatus(teacher.totalClasses, teacher.maxCapacity);
               const percentage = (teacher.totalClasses / teacher.maxCapacity) * 100;
               const Icon = loadStatus.icon;
@@ -76,7 +146,7 @@ export function TeacherLoadSummary() {
                 </tr>
               </thead>
               <tbody>
-                {subjectAllocationData.map((allocation, index) => (
+                {allocations.map((allocation, index) => (
                   <tr key={index} className="border-b">
                     <td className="p-2">{allocation.grade}</td>
                     <td className="p-2">{allocation.subject}</td>
