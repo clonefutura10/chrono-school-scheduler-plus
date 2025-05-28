@@ -101,7 +101,7 @@ export function TimetableGenerator() {
             <>
               <Calendar className="mr-2 h-4 w-4" />
               Generate Smart Timetable
-            <//>
+            </>
           )}
         </Button>
         
