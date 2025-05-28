@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { RequestForm } from '@/components/requests/RequestForm';
 import { RequestsList } from '@/components/requests/RequestsList';
@@ -8,43 +7,155 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Users, Clock, Target } from 'lucide-react';
-import { teacherLoadData, subjectAllocationData, coCurricularEvents } from '@/data/schoolData';
+import { coCurricularEvents } from '@/data/schoolData';
+import { supabase } from '@/integrations/supabase/client';
 
-const teacherProfile = {
-  name: "Sarah Johnson",
-  subjects: ["English"],
-  grades: ["Class 9", "Class 10"],
-  totalClasses: 16,
-  maxCapacity: 30,
-  schedule: [
-    { day: "Monday", periods: ["9-A English", "9-B English", "10-A English", "10-B English"] },
-    { day: "Tuesday", periods: ["9-A English", "10-A English", "10-B English"] },
-    { day: "Wednesday", periods: ["9-B English", "10-A English", "10-B English"] },
-    { day: "Thursday", periods: ["9-A English", "9-B English", "10-A English"] },
-    { day: "Friday", periods: ["9-A English", "9-B English", "10-B English"] }
-  ]
-};
-
-const upcomingEvents = coCurricularEvents
-  .filter(event => new Date(event.date) >= new Date())
-  .slice(0, 4)
-  .map(event => ({
-    event: event.event,
-    date: event.date,
-    type: event.type
-  }));
-
-const studentProgress = [
-  { class: "9-A", totalStudents: 35, assignments: { submitted: 32, pending: 3 }, avgScore: 78 },
-  { class: "9-B", totalStudents: 34, assignments: { submitted: 30, pending: 4 }, avgScore: 82 },
-  { class: "10-A", totalStudents: 33, assignments: { submitted: 33, pending: 0 }, avgScore: 85 },
-  { class: "10-B", totalStudents: 32, assignments: { submitted: 29, pending: 3 }, avgScore: 80 }
-];
+interface TeacherProfile {
+  name: string;
+  subjects: string[];
+  grades: string[];
+  totalClasses: number;
+  maxCapacity: number;
+  schedule: Array<{
+    day: string;
+    periods: string[];
+  }>;
+}
 
 const TeacherDashboard = () => {
+  const [teacherProfile, setTeacherProfile] = useState<TeacherProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Generate dynamic mock teacher data
+  const generateMockTeacherProfile = (): TeacherProfile => {
+    const names = ["Sarah Johnson", "Michael Chen", "Emily Wilson", "David Brown", "Lisa Anderson"];
+    const subjectSets = [
+      ["English", "Literature"],
+      ["Mathematics", "Statistics"],
+      ["Physics", "Chemistry"],
+      ["Biology", "Environmental Science"],
+      ["History", "Geography"]
+    ];
+    const gradeSets = [
+      ["Class 9", "Class 10"],
+      ["Class 10", "Class 11"],
+      ["Class 11", "Class 12"],
+      ["Class 8", "Class 9"],
+      ["Class 6", "Class 7"]
+    ];
+
+    const randomIndex = Math.floor(Math.random() * names.length);
+    const randomClasses = Math.floor(Math.random() * 10) + 15; // 15-25 classes
+    
+    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+    const schedule = days.map(day => ({
+      day,
+      periods: Array.from({length: Math.floor(Math.random() * 3) + 3}, (_, i) => 
+        `${Math.floor(Math.random() * 3) + 9}-${String.fromCharCode(65 + Math.floor(Math.random() * 3))} ${subjectSets[randomIndex][0]}`
+      )
+    }));
+
+    return {
+      name: names[randomIndex],
+      subjects: subjectSets[randomIndex],
+      grades: gradeSets[randomIndex],
+      totalClasses: randomClasses,
+      maxCapacity: 30,
+      schedule
+    };
+  };
+
+  useEffect(() => {
+    fetchTeacherData();
+  }, []);
+
+  const fetchTeacherData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch teacher data from Supabase
+      const { data: teachersData, error } = await supabase
+        .from('teachers')
+        .select('*')
+        .limit(1);
+
+      if (error) {
+        console.error('Error fetching teachers:', error);
+      }
+
+      let processedTeacherProfile: TeacherProfile;
+
+      if (teachersData && teachersData.length > 0) {
+        const teacher = teachersData[0];
+        const subjects = Array.isArray(teacher.subjects) 
+          ? teacher.subjects as string[]
+          : typeof teacher.subjects === 'string'
+          ? [teacher.subjects]
+          : ["English"];
+
+        // Generate realistic schedule
+        const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+        const schedule = days.map(day => ({
+          day,
+          periods: Array.from({length: Math.floor(Math.random() * 3) + 3}, (_, i) => 
+            `${Math.floor(Math.random() * 3) + 9}-${String.fromCharCode(65 + i)} ${subjects[0]}`
+          )
+        }));
+
+        processedTeacherProfile = {
+          name: `${teacher.first_name} ${teacher.last_name}`,
+          subjects,
+          grades: ["Class 9", "Class 10"], // Default grades
+          totalClasses: Math.floor(Math.random() * 10) + 15,
+          maxCapacity: teacher.max_hours_per_day || 30,
+          schedule
+        };
+      } else {
+        // Use dynamic mock data
+        processedTeacherProfile = generateMockTeacherProfile();
+      }
+
+      setTeacherProfile(processedTeacherProfile);
+
+    } catch (error) {
+      console.error('Error fetching teacher data:', error);
+      setTeacherProfile(generateMockTeacherProfile());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading || !teacherProfile) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-muted-foreground">Loading teacher dashboard...</div>
+        </div>
+      </AppLayout>
+    );
+  }
+
   const workloadPercentage = (teacherProfile.totalClasses / teacherProfile.maxCapacity) * 100;
+  
+  // Generate dynamic student progress data
+  const studentProgress = [
+    { class: "9-A", totalStudents: Math.floor(Math.random() * 10) + 30, assignments: { submitted: Math.floor(Math.random() * 5) + 28, pending: Math.floor(Math.random() * 5) + 2 }, avgScore: Math.floor(Math.random() * 15) + 75 },
+    { class: "9-B", totalStudents: Math.floor(Math.random() * 10) + 30, assignments: { submitted: Math.floor(Math.random() * 5) + 28, pending: Math.floor(Math.random() * 5) + 2 }, avgScore: Math.floor(Math.random() * 15) + 75 },
+    { class: "10-A", totalStudents: Math.floor(Math.random() * 10) + 30, assignments: { submitted: Math.floor(Math.random() * 5) + 28, pending: Math.floor(Math.random() * 5) + 2 }, avgScore: Math.floor(Math.random() * 15) + 75 },
+    { class: "10-B", totalStudents: Math.floor(Math.random() * 10) + 30, assignments: { submitted: Math.floor(Math.random() * 5) + 28, pending: Math.floor(Math.random() * 5) + 2 }, avgScore: Math.floor(Math.random() * 15) + 75 }
+  ];
+
   const totalStudents = studentProgress.reduce((sum, cls) => sum + cls.totalStudents, 0);
   const avgPerformance = Math.round(studentProgress.reduce((sum, cls) => sum + cls.avgScore, 0) / studentProgress.length);
+
+  const upcomingEvents = coCurricularEvents
+    .filter(event => new Date(event.date) >= new Date())
+    .slice(0, 4)
+    .map(event => ({
+      event: event.event,
+      date: event.date,
+      type: event.type
+    }));
 
   return (
     <AppLayout>
