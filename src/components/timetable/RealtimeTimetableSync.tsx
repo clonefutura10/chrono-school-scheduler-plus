@@ -7,8 +7,12 @@ import { supabase } from '@/integrations/supabase/client';
 export function RealtimeTimetableSync() {
   const [isConnected, setIsConnected] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
+  const [dataCount, setDataCount] = useState({ teachers: 0, classes: 0, subjects: 0 });
 
   useEffect(() => {
+    // Check initial data
+    checkDataCounts();
+
     // Subscribe to realtime changes for key tables
     const channel = supabase
       .channel('timetable-sync')
@@ -19,6 +23,7 @@ export function RealtimeTimetableSync() {
       }, (payload) => {
         console.log('Teacher data changed:', payload);
         setLastSync(new Date().toLocaleTimeString());
+        checkDataCounts();
       })
       .on('postgres_changes', {
         event: '*',
@@ -27,6 +32,7 @@ export function RealtimeTimetableSync() {
       }, (payload) => {
         console.log('Class data changed:', payload);
         setLastSync(new Date().toLocaleTimeString());
+        checkDataCounts();
       })
       .on('postgres_changes', {
         event: '*',
@@ -35,6 +41,7 @@ export function RealtimeTimetableSync() {
       }, (payload) => {
         console.log('Subject data changed:', payload);
         setLastSync(new Date().toLocaleTimeString());
+        checkDataCounts();
       })
       .on('postgres_changes', {
         event: '*',
@@ -44,15 +51,44 @@ export function RealtimeTimetableSync() {
         console.log('Availability data changed:', payload);
         setLastSync(new Date().toLocaleTimeString());
       })
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'timetables'
+      }, (payload) => {
+        console.log('Timetable data changed:', payload);
+        setLastSync(new Date().toLocaleTimeString());
+      })
       .subscribe((status) => {
         setIsConnected(status === 'SUBSCRIBED');
         console.log('Realtime connection status:', status);
+        if (status === 'SUBSCRIBED') {
+          setLastSync(new Date().toLocaleTimeString());
+        }
       });
 
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const checkDataCounts = async () => {
+    try {
+      const [teachersResult, classesResult, subjectsResult] = await Promise.all([
+        supabase.from('teachers').select('id', { count: 'exact' }),
+        supabase.from('classes').select('id', { count: 'exact' }),
+        supabase.from('subjects').select('id', { count: 'exact' })
+      ]);
+
+      setDataCount({
+        teachers: teachersResult.count || 0,
+        classes: classesResult.count || 0,
+        subjects: subjectsResult.count || 0
+      });
+    } catch (error) {
+      console.error('Error checking data counts:', error);
+    }
+  };
 
   return (
     <div className="flex items-center gap-2">
@@ -69,6 +105,11 @@ export function RealtimeTimetableSync() {
           </>
         )}
       </Badge>
+      {dataCount.teachers > 0 && (
+        <span className="text-xs text-muted-foreground">
+          {dataCount.teachers} teachers • {dataCount.classes} classes • {dataCount.subjects} subjects
+        </span>
+      )}
       {lastSync && (
         <span className="text-xs text-muted-foreground">
           Last update: {lastSync}

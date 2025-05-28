@@ -16,6 +16,26 @@ export function TimetableGenerator() {
     setIsGenerating(true);
     
     try {
+      // First check if we have the necessary data
+      const [teachersResult, classesResult, subjectsResult] = await Promise.all([
+        supabase.from('teachers').select('id', { count: 'exact' }),
+        supabase.from('classes').select('id', { count: 'exact' }),
+        supabase.from('subjects').select('id', { count: 'exact' })
+      ]);
+
+      const teacherCount = teachersResult.count || 0;
+      const classCount = classesResult.count || 0;
+      const subjectCount = subjectsResult.count || 0;
+
+      if (teacherCount === 0 || classCount === 0 || subjectCount === 0) {
+        toast({
+          title: "Missing Setup Data",
+          description: `Please ensure you have teachers (${teacherCount}), classes (${classCount}), and subjects (${subjectCount}) set up in the setup portal first.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('generate-timetable');
       
       if (error) throw error;
@@ -33,7 +53,7 @@ export function TimetableGenerator() {
       console.error('Error generating timetable:', error);
       toast({
         title: "Generation Failed",
-        description: "Failed to generate timetable. Please try again.",
+        description: "Failed to generate timetable. Please ensure the setup portal has all required data.",
         variant: "destructive",
       });
     } finally {
@@ -81,7 +101,7 @@ export function TimetableGenerator() {
             <>
               <Calendar className="mr-2 h-4 w-4" />
               Generate Smart Timetable
-            </>
+            <//>
           )}
         </Button>
         

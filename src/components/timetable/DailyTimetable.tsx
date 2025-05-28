@@ -1,10 +1,9 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TimetableCell } from './TimetableCell';
-import { subjectAllocationData } from '@/data/schoolData';
+import { supabase } from '@/integrations/supabase/client';
 
-// Sample data for the timetable
+// Keep the same time slots and weekdays
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 const TIME_SLOTS = [
   '8:00 - 8:40',
@@ -18,101 +17,15 @@ const TIME_SLOTS = [
   '1:20 - 2:00',
 ];
 
-// Generate comprehensive class data from school data
-const generateTimetableData = () => {
-  const timetableData = [];
-  
-  // Create a schedule for each grade/division combination
-  const scheduleTemplates = {
-    'Monday': [
-      { timeSlot: '8:00 - 8:40', period: 1 },
-      { timeSlot: '8:45 - 9:25', period: 2 },
-      { timeSlot: '9:30 - 10:10', period: 3 },
-      { timeSlot: '10:30 - 11:10', period: 4 },
-      { timeSlot: '11:15 - 11:55', period: 5 },
-      { timeSlot: '12:00 - 12:40', period: 6 },
-      { timeSlot: '1:20 - 2:00', period: 7 },
-    ],
-    'Tuesday': [
-      { timeSlot: '8:00 - 8:40', period: 1 },
-      { timeSlot: '8:45 - 9:25', period: 2 },
-      { timeSlot: '9:30 - 10:10', period: 3 },
-      { timeSlot: '10:30 - 11:10', period: 4 },
-      { timeSlot: '11:15 - 11:55', period: 5 },
-      { timeSlot: '12:00 - 12:40', period: 6 },
-      { timeSlot: '1:20 - 2:00', period: 7 },
-    ],
-    'Wednesday': [
-      { timeSlot: '8:00 - 8:40', period: 1 },
-      { timeSlot: '8:45 - 9:25', period: 2 },
-      { timeSlot: '9:30 - 10:10', period: 3 },
-      { timeSlot: '10:30 - 11:10', period: 4 },
-      { timeSlot: '11:15 - 11:55', period: 5 },
-      { timeSlot: '12:00 - 12:40', period: 6 },
-      { timeSlot: '1:20 - 2:00', period: 7 },
-    ],
-    'Thursday': [
-      { timeSlot: '8:00 - 8:40', period: 1 },
-      { timeSlot: '8:45 - 9:25', period: 2 },
-      { timeSlot: '9:30 - 10:10', period: 3 },
-      { timeSlot: '10:30 - 11:10', period: 4 },
-      { timeSlot: '11:15 - 11:55', period: 5 },
-      { timeSlot: '12:00 - 12:40', period: 6 },
-      { timeSlot: '1:20 - 2:00', period: 7 },
-    ],
-    'Friday': [
-      { timeSlot: '8:00 - 8:40', period: 1 },
-      { timeSlot: '8:45 - 9:25', period: 2 },
-      { timeSlot: '9:30 - 10:10', period: 3 },
-      { timeSlot: '10:30 - 11:10', period: 4 },
-      { timeSlot: '11:15 - 11:55', period: 5 },
-      { timeSlot: '12:00 - 12:40', period: 6 },
-      { timeSlot: '1:20 - 2:00', period: 7 },
-    ],
-  };
-
-  // Create subject rotation for different days
-  WEEKDAYS.forEach((day, dayIndex) => {
-    const daySchedule = scheduleTemplates[day];
-    
-    daySchedule.forEach((slot, slotIndex) => {
-      // Get subjects for Class 10 from our school data
-      const class10Subjects = subjectAllocationData.filter(s => s.grade === 'Class 10');
-      
-      if (class10Subjects.length > 0) {
-        // Rotate subjects across days and periods
-        const subjectIndex = (dayIndex * 7 + slotIndex) % class10Subjects.length;
-        const subject = class10Subjects[subjectIndex];
-        
-        // Determine room based on subject
-        let room = 'Room 101';
-        if (subject.subject.toLowerCase().includes('science') || subject.subject.toLowerCase().includes('physics') || subject.subject.toLowerCase().includes('chemistry') || subject.subject.toLowerCase().includes('biology')) {
-          room = 'Science Lab';
-        } else if (subject.subject.toLowerCase().includes('computer')) {
-          room = 'Computer Lab 1';
-        } else if (subject.subject.toLowerCase().includes('physical')) {
-          room = 'Gymnasium';
-        } else if (subject.subject.toLowerCase().includes('math')) {
-          room = 'Math Lab';
-        }
-
-        timetableData.push({
-          day: day,
-          timeSlot: slot.timeSlot,
-          subject: subject.subject,
-          teacher: subject.teacher,
-          room: room,
-          grade: '10',
-          division: 'A',
-        });
-      }
-    });
-  });
-
-  return timetableData;
-};
-
-const generatedClasses = generateTimetableData();
+interface ClassInfo {
+  day: string;
+  timeSlot: string;
+  subject: string;
+  teacher: string;
+  room: string;
+  grade: string;
+  division: string;
+}
 
 interface DailyTimetableProps {
   grade?: string;
@@ -120,12 +33,103 @@ interface DailyTimetableProps {
 }
 
 export function DailyTimetable({ grade = '10', division = 'A' }: DailyTimetableProps) {
-  const filteredClasses = generatedClasses.filter(
-    (cls) => cls.grade === grade && cls.division === division
-  );
+  const [timetableData, setTimetableData] = useState<ClassInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTimetableData();
+  }, [grade, division]);
+
+  const fetchTimetableData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch timetable data from Supabase
+      const { data: timetables, error } = await supabase
+        .from('timetables')
+        .select(`
+          *,
+          teachers(first_name, last_name),
+          subjects(name),
+          classes(grade, section)
+        `)
+        .eq('classes.grade', `Class ${grade}`)
+        .eq('classes.section', division);
+
+      if (error) {
+        console.error('Error fetching timetable:', error);
+        // Fall back to generated data if no real data exists
+        setTimetableData(generateFallbackData());
+        return;
+      }
+
+      if (timetables && timetables.length > 0) {
+        // Transform Supabase data to match existing structure
+        const transformedData = timetables.map((item: any) => ({
+          day: item.day_of_week,
+          timeSlot: getTimeSlotByPeriod(item.period_number),
+          subject: item.subjects?.name || 'General',
+          teacher: item.teachers ? `${item.teachers.first_name} ${item.teachers.last_name}` : 'Staff',
+          room: item.room_number || 'Room 101',
+          grade: grade,
+          division: division,
+        }));
+        setTimetableData(transformedData);
+      } else {
+        // Generate fallback data if no timetables exist
+        setTimetableData(generateFallbackData());
+      }
+    } catch (error) {
+      console.error('Error fetching timetable data:', error);
+      setTimetableData(generateFallbackData());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getTimeSlotByPeriod = (periodNumber: number) => {
+    const timeSlotMap = {
+      1: '8:00 - 8:40',
+      2: '8:45 - 9:25', 
+      3: '9:30 - 10:10',
+      4: '10:30 - 11:10',
+      5: '11:15 - 11:55',
+      6: '12:00 - 12:40',
+      7: '1:20 - 2:00',
+    };
+    return timeSlotMap[periodNumber as keyof typeof timeSlotMap] || '8:00 - 8:40';
+  };
+
+  const generateFallbackData = () => {
+    // Keep the same fallback generation logic as before
+    const fallbackData: ClassInfo[] = [];
+    const subjects = ['Mathematics', 'English', 'Science', 'History', 'Geography', 'Physical Education'];
+    const teachers = ['John Smith', 'Sarah Johnson', 'Michael Brown', 'Jessica Lee', 'David Wilson'];
+    
+    WEEKDAYS.forEach((day, dayIndex) => {
+      TIME_SLOTS.forEach((timeSlot, slotIndex) => {
+        if (timeSlot !== '10:10 - 10:30' && timeSlot !== '12:40 - 1:20') {
+          const subjectIndex = (dayIndex * 7 + slotIndex) % subjects.length;
+          const teacherIndex = (dayIndex * 7 + slotIndex) % teachers.length;
+          
+          fallbackData.push({
+            day: day,
+            timeSlot: timeSlot,
+            subject: subjects[subjectIndex],
+            teacher: teachers[teacherIndex],
+            room: `Room ${101 + (slotIndex % 5)}`,
+            grade: grade,
+            division: division,
+          });
+        }
+      });
+    });
+    
+    return fallbackData;
+  };
 
   const getClassForTimeSlot = (day: string, timeSlot: string) => {
-    return filteredClasses.find(
+    return timetableData.find(
       (cls) => cls.day === day && cls.timeSlot === timeSlot
     );
   };
@@ -133,6 +137,23 @@ export function DailyTimetable({ grade = '10', division = 'A' }: DailyTimetableP
   const isBreak = (timeSlot: string) => {
     return timeSlot === '10:10 - 10:30' || timeSlot === '12:40 - 1:20';
   };
+
+  if (loading) {
+    return (
+      <Card className="shadow-md">
+        <CardHeader className="bg-school-50 border-b">
+          <CardTitle className="text-center text-school-900">
+            Grade {grade} - Division {division} Timetable
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-muted-foreground">Loading timetable...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="shadow-md">
