@@ -1,7 +1,8 @@
-
 import React from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { DailyTimetable } from '@/components/timetable/DailyTimetable';
+import { TimetableGenerator } from '@/components/timetable/TimetableGenerator';
+import { RealtimeTimetableSync } from '@/components/timetable/RealtimeTimetableSync';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { Calendar, Award, BookOpen, GraduationCap, Clock, Users, Target } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,127 +70,65 @@ const Index = () => {
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Student Dashboard</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Chrono School Scheduler Plus</h2>
             <p className="text-muted-foreground">
-              Welcome back, {student.name}. Academic Year {student.academicYear} - {student.term}
+              AI-Powered Timetable Management System
             </p>
-            <p className="text-sm text-muted-foreground">
-              Theme: {academicStructure.theme} • Working Days: {academicStructure.workingDays}
-            </p>
+            <RealtimeTimetableSync />
           </div>
           <div className="flex gap-2">
             <Button variant="outline">
               <Clock className="mr-2 h-4 w-4" /> Today's Schedule
             </Button>
             <Button variant="outline">
-              <Users className="mr-2 h-4 w-4" /> Class {student.grade}-{student.division}
+              <Users className="mr-2 h-4 w-4" /> Sync Status
             </Button>
           </div>
         </div>
 
-        <StudentProfile student={student} />
-
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            title="Attendance"
-            value={`${student.attendance}%`}
-            description="Overall attendance rate"
-            icon={<Calendar className="h-4 w-4" />}
-          />
-          <StatsCard
-            title="Class Ranking"
-            value={`#${student.ranking}`}
-            description={`Among ${classInfo.totalStudents} students`}
-            icon={<Award className="h-4 w-4" />}
-          />
-          <StatsCard
-            title="Assignments"
-            value={`${student.completedAssignments}/${student.totalAssignments}`}
-            description="Completed assignments"
-            icon={<BookOpen className="h-4 w-4" />}
-            trending="up"
-            trendValue="3 submitted recently"
-          />
-          <StatsCard
-            title="Learning Progress"
-            value={`${student.learningProgress}%`}
-            description="Course completion rate"
-            icon={<GraduationCap className="h-4 w-4" />}
-          />
-        </div>
-
         <div className="grid gap-4 md:grid-cols-3">
+          <TimetableGenerator />
+          
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Class Information</CardTitle>
+              <CardTitle className="text-lg">Setup Portal Sync</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm font-medium">Class</span>
-                <Badge variant="outline">{student.grade}-{student.division}</Badge>
+              <div className="text-sm text-muted-foreground">
+                This scheduler automatically syncs with the setup portal to get the latest:
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-medium">Students</span>
-                <span className="text-sm">{classInfo.totalStudents}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-medium">Class Teacher</span>
-                <span className="text-sm">{classInfo.classTeacher}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-medium">Subjects</span>
-                <span className="text-sm">{classInfo.subjects}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-medium">Ideal Class Size</span>
-                <span className="text-sm">{currentClass?.idealClassSize}</span>
-              </div>
+              <ul className="text-sm space-y-1">
+                <li>• Teacher availability & preferences</li>
+                <li>• Class configurations & requirements</li>
+                <li>• Subject assignments & schedules</li>
+                <li>• Real-time updates & changes</li>
+              </ul>
+              <Badge className="bg-green-100 text-green-800">Connected</Badge>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Academic Status</CardTitle>
+              <CardTitle className="text-lg">AI Scheduling Features</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm font-medium">Academic Year</span>
-                <span className="text-sm">{student.academicYear}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-medium">Current Term</span>
-                <Badge variant="outline">{student.term}</Badge>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-medium">Student ID</span>
-                <span className="text-sm">{student.id}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-medium">Status</span>
-                <Badge className="bg-green-100 text-green-800">Active</Badge>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm font-medium">Working Days</span>
-                <span className="text-sm">{academicStructure.workingDays}</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Upcoming Events</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {upcomingEvents.slice(0, 3).map((event, index) => (
-                  <div key={index} className="text-sm">
-                    <div className="font-medium">{event.event}</div>
-                    <div className="text-muted-foreground text-xs flex justify-between">
-                      <span>{event.date}</span>
-                      <Badge className="text-xs" variant="outline">{event.type}</Badge>
-                    </div>
-                  </div>
-                ))}
+              <div className="text-sm space-y-2">
+                <div className="flex justify-between">
+                  <span>Conflict Detection</span>
+                  <Badge variant="outline">Active</Badge>
+                </div>
+                <div className="flex justify-between">
+                  <span>Load Balancing</span>
+                  <Badge variant="outline">Optimized</Badge>
+                </div>
+                <div className="flex justify-between">
+                  <span>Smart Assignment</span>
+                  <Badge variant="outline">Groq AI</Badge>
+                </div>
+                <div className="flex justify-between">
+                  <span>Auto-Sync</span>
+                  <Badge variant="outline">Real-time</Badge>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -199,7 +138,7 @@ const Index = () => {
 
         <Tabs defaultValue="timetable" className="w-full">
           <TabsList className="grid w-full md:w-[600px] grid-cols-3">
-            <TabsTrigger value="timetable">My Timetable</TabsTrigger>
+            <TabsTrigger value="timetable">Smart Timetable</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
           </TabsList>
@@ -208,14 +147,14 @@ const Index = () => {
             <Card className="border shadow-sm">
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">
-                  <span>Class {student.grade}-{student.division} Timetable</span>
+                  <span>AI-Generated Class Timetable</span>
                   <Button variant="outline" size="sm">Download</Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <DailyTimetable 
-                  grade={student.grade} 
-                  division={student.division} 
+                  grade="10" 
+                  division="A" 
                 />
               </CardContent>
             </Card>
