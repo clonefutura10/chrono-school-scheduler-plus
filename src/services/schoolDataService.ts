@@ -82,7 +82,18 @@ export class SchoolDataService {
         return null;
       }
 
-      return data;
+      // Type-safe data processing
+      if (data) {
+        return {
+          ...data,
+          classes: data.classes ? {
+            ...data.classes,
+            teachers: data.classes.teachers || null
+          } : null
+        } as StudentWithClass;
+      }
+
+      return null;
     } catch (error) {
       console.error('Error in getStudentById:', error);
       return null;
@@ -120,7 +131,17 @@ export class SchoolDataService {
         return [];
       }
 
-      return data || [];
+      // Process subjects field to ensure it's a string array
+      const processedData = (data || []).map(teacher => ({
+        ...teacher,
+        subjects: Array.isArray(teacher.subjects) 
+          ? teacher.subjects as string[]
+          : typeof teacher.subjects === 'string' 
+            ? [teacher.subjects]
+            : []
+      })) as Teacher[];
+
+      return processedData;
     } catch (error) {
       console.error('Error in getAllTeachers:', error);
       return [];
@@ -155,7 +176,19 @@ export class SchoolDataService {
         return null;
       }
 
-      return data;
+      // Process subjects field and return properly typed data
+      if (data) {
+        return {
+          ...data,
+          subjects: Array.isArray(data.subjects) 
+            ? data.subjects as string[]
+            : typeof data.subjects === 'string' 
+              ? [data.subjects]
+              : []
+        } as TeacherWithAssignments;
+      }
+
+      return null;
     } catch (error) {
       console.error('Error in getTeacherById:', error);
       return null;
@@ -219,7 +252,15 @@ export class SchoolDataService {
         return [];
       }
 
-      return data || [];
+      // Process data to handle potential teacher relationship errors
+      const processedData = (data || []).map(classItem => ({
+        ...classItem,
+        teachers: classItem.teachers && typeof classItem.teachers === 'object' && !('error' in classItem.teachers) 
+          ? classItem.teachers 
+          : null
+      })) as ClassWithTeacher[];
+
+      return processedData;
     } catch (error) {
       console.error('Error in getAllClasses:', error);
       return [];
@@ -298,7 +339,15 @@ export class SchoolDataService {
         return [];
       }
 
-      return data || [];
+      // Process equipment field to ensure it's an array
+      const processedData = (data || []).map(item => ({
+        ...item,
+        equipment: Array.isArray(item.equipment) 
+          ? item.equipment 
+          : []
+      })) as Infrastructure[];
+
+      return processedData;
     } catch (error) {
       console.error('Error in getAllInfrastructure:', error);
       return [];
