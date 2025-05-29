@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type { 
   School, 
@@ -82,13 +83,19 @@ export class SchoolDataService {
       }
 
       if (data) {
-        return {
+        // Safe type conversion with fallback handling
+        const studentWithClass: StudentWithClass = {
           ...data,
           classes: data.assigned_class ? {
             ...data.assigned_class,
-            teachers: data.assigned_class.class_teacher || null
+            teachers: data.assigned_class.class_teacher && 
+                     typeof data.assigned_class.class_teacher === 'object' && 
+                     'first_name' in data.assigned_class.class_teacher ? 
+              data.assigned_class.class_teacher : null
           } : null
-        } as StudentWithClass;
+        };
+        
+        return studentWithClass;
       }
 
       return null;
@@ -248,9 +255,13 @@ export class SchoolDataService {
         return [];
       }
 
+      // Safe type conversion with proper fallback handling
       const processedData = (data || []).map(classItem => ({
         ...classItem,
-        teachers: classItem.class_teacher || null
+        teachers: classItem.class_teacher && 
+                 typeof classItem.class_teacher === 'object' && 
+                 'first_name' in classItem.class_teacher ? 
+          classItem.class_teacher : null
       })) as ClassWithTeacher[];
 
       return processedData;

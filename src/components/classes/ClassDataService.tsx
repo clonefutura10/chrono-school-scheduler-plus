@@ -52,12 +52,12 @@ const generateMockStudents = (grade: string, division: string): StudentData[] =>
 
 export const fetchClassData = async (): Promise<ClassData[]> => {
   try {
-    // Fetch classes from Supabase
+    // Fetch classes from Supabase with explicit column hint for teacher relationship
     const { data: classesData, error: classesError } = await supabase
       .from('classes')
       .select(`
         *,
-        teachers(first_name, last_name)
+        class_teacher:class_teacher_id(first_name, last_name)
       `);
 
     // Fetch subjects
@@ -82,7 +82,9 @@ export const fetchClassData = async (): Promise<ClassData[]> => {
         division: cls.section || 'A',
         students: cls.capacity || Math.floor(Math.random() * 15) + 30,
         subjects: subjectsData?.map(s => s.name) || [],
-        classTeacher: cls.teachers ? `${cls.teachers.first_name} ${cls.teachers.last_name}` : 'TBD',
+        classTeacher: cls.class_teacher ? 
+          `${cls.class_teacher.first_name || ''} ${cls.class_teacher.last_name || ''}`.trim() || 'TBD' 
+          : 'TBD',
         capacity: cls.capacity || 40
       }));
     }
@@ -110,7 +112,23 @@ export const fetchClassData = async (): Promise<ClassData[]> => {
     return processedClasses;
   } catch (error) {
     console.error('Error in fetchClassData:', error);
-    return [];
+    // Return mock data as fallback
+    const grades = ['6', '7', '8', '9', '10', '11', '12'];
+    const divisions = ['A', 'B', 'C'];
+    const mockTeachers = ["Sarah Johnson", "Michael Chen", "Emily Davis", "James Wilson", "Lisa Anderson"];
+    const mockSubjects = ["English", "Mathematics", "Science", "Social Studies", "Physical Education"];
+
+    return grades.flatMap(grade => 
+      divisions.slice(0, Math.floor(Math.random() * 3) + 1).map(division => ({
+        id: `${grade}-${division}`,
+        grade,
+        division,
+        students: Math.floor(Math.random() * 15) + 30,
+        subjects: mockSubjects,
+        classTeacher: mockTeachers[Math.floor(Math.random() * mockTeachers.length)],
+        capacity: 45
+      }))
+    );
   }
 };
 
@@ -132,8 +150,8 @@ export const fetchStudentsForClass = async (grade: string, division: string): Pr
     if (studentsData && studentsData.length > 0) {
       processedStudents = studentsData.map(student => ({
         id: student.id,
-        name: `${student.first_name} ${student.last_name}`,
-        rollNo: student.student_id,
+        name: `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'Unknown Student',
+        rollNo: student.student_id || `${grade}${division}00`,
         attendance: Math.floor(Math.random() * 20) + 80, // Mock attendance
         performance: ["Excellent", "Good", "Average"][Math.floor(Math.random() * 3)], // Mock performance
         grade: student.grade || grade,
