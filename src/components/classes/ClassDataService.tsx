@@ -76,17 +76,23 @@ export const fetchClassData = async (): Promise<ClassData[]> => {
     let processedClasses: ClassData[] = [];
 
     if (classesData && classesData.length > 0) {
-      processedClasses = classesData.map(cls => ({
-        id: cls.id,
-        grade: cls.grade || '',
-        division: cls.section || 'A',
-        students: cls.capacity || Math.floor(Math.random() * 15) + 30,
-        subjects: subjectsData?.map(s => s.name) || [],
-        classTeacher: cls.class_teacher ? 
-          `${cls.class_teacher.first_name || ''} ${cls.class_teacher.last_name || ''}`.trim() || 'TBD' 
-          : 'TBD',
-        capacity: cls.capacity || 40
-      }));
+      processedClasses = classesData.map(cls => {
+        // Use type assertion to bypass TypeScript inference issues
+        const clsAny = cls as any;
+        const teacher = clsAny.class_teacher;
+        
+        return {
+          id: cls.id,
+          grade: cls.grade || '',
+          division: cls.section || 'A',
+          students: cls.capacity || Math.floor(Math.random() * 15) + 30,
+          subjects: subjectsData?.map(s => s.name) || [],
+          classTeacher: teacher ? 
+            `${teacher.first_name || ''} ${teacher.last_name || ''}`.trim() || 'TBD' 
+            : 'TBD',
+          capacity: cls.capacity || 40
+        };
+      });
     }
 
     // If no real data, generate mock data

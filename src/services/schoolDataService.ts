@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { 
   School, 
@@ -83,15 +82,18 @@ export class SchoolDataService {
       }
 
       if (data) {
-        // Safe type conversion with fallback handling
+        // Safe type conversion with fallback handling using type assertion
+        const dataAny = data as any;
+        const assignedClass = dataAny.assigned_class;
+        
         const studentWithClass: StudentWithClass = {
           ...data,
-          classes: data.assigned_class ? {
-            ...data.assigned_class,
-            teachers: data.assigned_class.class_teacher && 
-                     typeof data.assigned_class.class_teacher === 'object' && 
-                     'first_name' in data.assigned_class.class_teacher ? 
-              data.assigned_class.class_teacher : null
+          classes: assignedClass ? {
+            ...assignedClass,
+            teachers: assignedClass.class_teacher && 
+                     typeof assignedClass.class_teacher === 'object' && 
+                     assignedClass.class_teacher.first_name ? 
+              assignedClass.class_teacher : null
           } : null
         };
         
@@ -255,14 +257,19 @@ export class SchoolDataService {
         return [];
       }
 
-      // Safe type conversion with proper fallback handling
-      const processedData = (data || []).map(classItem => ({
-        ...classItem,
-        teachers: classItem.class_teacher && 
-                 typeof classItem.class_teacher === 'object' && 
-                 'first_name' in classItem.class_teacher ? 
-          classItem.class_teacher : null
-      })) as ClassWithTeacher[];
+      // Safe type conversion with proper fallback handling using type assertion
+      const processedData = (data || []).map(classItem => {
+        const classAny = classItem as any;
+        const teacher = classAny.class_teacher;
+        
+        return {
+          ...classItem,
+          teachers: teacher && 
+                   typeof teacher === 'object' && 
+                   teacher.first_name ? 
+            teacher : null
+        };
+      }) as ClassWithTeacher[];
 
       return processedData;
     } catch (error) {
