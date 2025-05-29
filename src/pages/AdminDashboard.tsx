@@ -16,9 +16,14 @@ import {
   Calendar,
   TrendingUp,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Brain,
+  Zap
 } from 'lucide-react';
 import { SchoolDataService } from '@/services/schoolDataService';
+import { AITimetableGenerator } from '@/components/ai/AITimetableGenerator';
+import { AIPerformanceAnalytics } from '@/components/ai/AIPerformanceAnalytics';
+import { AIRecommendations } from '@/components/ai/AIRecommendations';
 import type { School as SchoolType } from '@/types/database';
 
 // Mock data interfaces for fallback
@@ -181,23 +186,29 @@ const AdminDashboard = () => {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
+          <h2 className="text-3xl font-bold tracking-tight">AI-Powered Admin Dashboard</h2>
           <p className="text-muted-foreground">
             Welcome to {schoolData.name} - Academic Year {schoolData.academic_year}
           </p>
           <p className="text-sm text-muted-foreground">
             Principal: {schoolData.principal_name} • Vision: {schoolData.school_vision} • Working Days: {schoolData.working_days?.length || 5}/week
           </p>
-          {realDataAvailable && (
-            <Badge className="mt-1 bg-green-100 text-green-800">
-              ✅ Live Database Connected
+          <div className="flex gap-2 mt-2">
+            {realDataAvailable && (
+              <Badge className="bg-green-100 text-green-800">
+                ✅ Live Database Connected
+              </Badge>
+            )}
+            {!realDataAvailable && (
+              <Badge className="bg-blue-100 text-blue-800">
+                🔄 Demo Mode - Data refreshes on reload
+              </Badge>
+            )}
+            <Badge className="bg-purple-100 text-purple-800">
+              <Brain className="h-3 w-3 mr-1" />
+              AI-Powered Analytics
             </Badge>
-          )}
-          {!realDataAvailable && (
-            <Badge className="mt-1 bg-blue-100 text-blue-800">
-              🔄 Demo Mode - Data refreshes on reload
-            </Badge>
-          )}
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -253,9 +264,20 @@ const AdminDashboard = () => {
         <Separator />
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full md:w-[600px] grid-cols-3">
+          <TabsList className="grid w-full md:w-[800px] grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="ai-timetable">
+              <Brain className="h-4 w-4 mr-1" />
+              AI Timetable
+            </TabsTrigger>
+            <TabsTrigger value="ai-analytics">
+              <Zap className="h-4 w-4 mr-1" />
+              AI Analytics
+            </TabsTrigger>
+            <TabsTrigger value="ai-recommendations">
+              <TrendingUp className="h-4 w-4 mr-1" />
+              AI Insights
+            </TabsTrigger>
             <TabsTrigger value="management">Management</TabsTrigger>
           </TabsList>
 
@@ -326,51 +348,16 @@ const AdminDashboard = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="analytics" className="space-y-4 mt-4">
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Capacity Analysis</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm">Student Capacity</span>
-                      <span className="text-sm">{studentCount}/{totalCapacity}</span>
-                    </div>
-                    <Progress value={utilizationRate} className="h-2" />
-                  </div>
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm">Teacher Workload</span>
-                      <span className="text-sm">{teacherStudentRatio}:1 ratio</span>
-                    </div>
-                    <Progress value={Math.min((teacherStudentRatio / 25) * 100, 100)} className="h-2" />
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Optimal teacher-student ratio: 20:1
-                  </div>
-                </CardContent>
-              </Card>
+          <TabsContent value="ai-timetable" className="space-y-4 mt-4">
+            <AITimetableGenerator />
+          </TabsContent>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Resource Distribution</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div className="p-3 border rounded">
-                      <div className="text-2xl font-bold">{Math.floor(studentCount / classroomCount) || 0}</div>
-                      <div className="text-xs text-muted-foreground">Students per Classroom</div>
-                    </div>
-                    <div className="p-3 border rounded">
-                      <div className="text-2xl font-bold">{Math.floor(classroomCount / teacherCount) || 0}</div>
-                      <div className="text-xs text-muted-foreground">Classrooms per Teacher</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+          <TabsContent value="ai-analytics" className="space-y-4 mt-4">
+            <AIPerformanceAnalytics />
+          </TabsContent>
+
+          <TabsContent value="ai-recommendations" className="space-y-4 mt-4">
+            <AIRecommendations />
           </TabsContent>
 
           <TabsContent value="management" className="space-y-4 mt-4">

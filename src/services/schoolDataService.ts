@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { 
   School, 
@@ -63,12 +62,12 @@ export class SchoolDataService {
         .from('students')
         .select(`
           *,
-          classes:assigned_class_id (
+          assigned_class:assigned_class_id (
             id,
             name,
             grade,
             section,
-            teachers:class_teacher_id (
+            class_teacher:class_teacher_id (
               first_name,
               last_name
             )
@@ -82,13 +81,12 @@ export class SchoolDataService {
         return null;
       }
 
-      // Type-safe data processing
       if (data) {
         return {
           ...data,
-          classes: data.classes ? {
-            ...data.classes,
-            teachers: data.classes.teachers || null
+          classes: data.assigned_class ? {
+            ...data.assigned_class,
+            teachers: data.assigned_class.class_teacher || null
           } : null
         } as StudentWithClass;
       }
@@ -131,7 +129,6 @@ export class SchoolDataService {
         return [];
       }
 
-      // Process subjects field to ensure it's a string array
       const processedData = (data || []).map(teacher => ({
         ...teacher,
         subjects: Array.isArray(teacher.subjects) 
@@ -176,7 +173,6 @@ export class SchoolDataService {
         return null;
       }
 
-      // Process subjects field and return properly typed data
       if (data) {
         return {
           ...data,
@@ -240,7 +236,7 @@ export class SchoolDataService {
         .from('classes')
         .select(`
           *,
-          teachers:class_teacher_id (
+          class_teacher:class_teacher_id (
             first_name,
             last_name
           )
@@ -252,12 +248,9 @@ export class SchoolDataService {
         return [];
       }
 
-      // Process data to handle potential teacher relationship errors
       const processedData = (data || []).map(classItem => ({
         ...classItem,
-        teachers: classItem.teachers && typeof classItem.teachers === 'object' && !('error' in classItem.teachers) 
-          ? classItem.teachers 
-          : null
+        teachers: classItem.class_teacher || null
       })) as ClassWithTeacher[];
 
       return processedData;
@@ -283,6 +276,45 @@ export class SchoolDataService {
     } catch (error) {
       console.error('Error in getClassroomCount:', error);
       return 0;
+    }
+  }
+
+  // New AI-specific data fetching methods
+  static async getCompleteSchoolDataForAI() {
+    try {
+      const [
+        school,
+        teachers,
+        students,
+        subjects,
+        classes,
+        timeSlots,
+        infrastructure,
+        teacherMappings
+      ] = await Promise.all([
+        this.getSchoolInfo(),
+        this.getAllTeachers(),
+        this.getAllStudents(),
+        this.getAllSubjects(),
+        this.getAllClasses(),
+        this.getAllTimeSlots(),
+        this.getAllInfrastructure(),
+        this.getTeacherSubjectMappings()
+      ]);
+
+      return {
+        school,
+        teachers,
+        students,
+        subjects,
+        classes,
+        timeSlots,
+        infrastructure,
+        teacherMappings
+      };
+    } catch (error) {
+      console.error('Error fetching complete school data:', error);
+      return null;
     }
   }
 
@@ -339,7 +371,6 @@ export class SchoolDataService {
         return [];
       }
 
-      // Process equipment field to ensure it's an array
       const processedData = (data || []).map(item => ({
         ...item,
         equipment: Array.isArray(item.equipment) 

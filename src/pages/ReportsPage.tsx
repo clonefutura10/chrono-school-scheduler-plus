@@ -1,403 +1,235 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { Button } from '@/components/ui/button';
-import { BarChart, FileText, Download, PieChart, ArrowDownToLine, RefreshCcw } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { toast } from 'sonner';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, Legend } from 'recharts';
-
-// Mock data
-const attendanceData = [
-  { grade: '9A', attendance: 95 },
-  { grade: '9B', attendance: 92 },
-  { grade: '10A', attendance: 97 },
-  { grade: '10B', attendance: 91 },
-  { grade: '11A', attendance: 94 },
-  { grade: '11B', attendance: 89 },
-  { grade: '12A', attendance: 96 },
-  { grade: '12B', attendance: 93 },
-];
-
-const performanceData = [
-  { grade: '9A', excellent: 15, good: 10, average: 5, poor: 2 },
-  { grade: '9B', excellent: 12, good: 12, average: 6, poor: 3 },
-  { grade: '10A', excellent: 18, good: 8, average: 4, poor: 1 },
-  { grade: '10B', excellent: 10, good: 15, average: 7, poor: 2 },
-  { grade: '11A', excellent: 14, good: 9, average: 6, poor: 1 },
-  { grade: '11B', excellent: 9, good: 12, average: 8, poor: 3 },
-];
-
-const subjectPerformanceData = [
-  { subject: 'Mathematics', excellent: 40, good: 30, average: 20, poor: 10 },
-  { subject: 'Science', excellent: 45, good: 35, average: 15, poor: 5 },
-  { subject: 'English', excellent: 50, good: 25, average: 15, poor: 10 },
-  { subject: 'History', excellent: 35, good: 40, average: 20, poor: 5 },
-  { subject: 'Geography', excellent: 30, good: 45, average: 20, poor: 5 },
-];
-
-const teacherPerformanceData = [
-  { name: 'John Smith', rating: 4.8, subjects: 'Mathematics' },
-  { name: 'Sarah Johnson', rating: 4.5, subjects: 'English' },
-  { name: 'Michael Brown', rating: 4.7, subjects: 'Physics' },
-  { name: 'Jessica Lee', rating: 4.9, subjects: 'Chemistry' },
-  { name: 'David Wilson', rating: 4.6, subjects: 'History' },
-];
-
-const COLORS = ['#4f46e5', '#3b82f6', '#0ea5e9', '#14b8a6'];
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { 
+  BarChart3, 
+  TrendingUp, 
+  Users, 
+  GraduationCap,
+  Brain,
+  Target,
+  AlertTriangle,
+  CheckCircle
+} from 'lucide-react';
+import { AIPerformanceAnalytics } from '@/components/ai/AIPerformanceAnalytics';
+import { AIRecommendations } from '@/components/ai/AIRecommendations';
 
 const ReportsPage = () => {
-  const [reportPeriod, setReportPeriod] = useState('term');
-  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-
-  const handleGenerateReport = (reportType) => {
-    setIsGeneratingReport(true);
-    setTimeout(() => {
-      setIsGeneratingReport(false);
-      toast.success(`${reportType} report generated successfully`);
-    }, 1500);
+  // Mock data for traditional reports
+  const studentStats = {
+    totalStudents: 1068,
+    byGrade: [
+      { grade: "Grade 9", count: 285, percentage: 27 },
+      { grade: "Grade 10", count: 297, percentage: 28 },
+      { grade: "Grade 11", count: 254, percentage: 24 },
+      { grade: "Grade 12", count: 232, percentage: 22 }
+    ],
+    attendanceRate: 94.2,
+    performanceMetrics: {
+      excellent: 23,
+      good: 45,
+      satisfactory: 28,
+      needsImprovement: 4
+    }
   };
 
-  const handleExportData = (format) => {
-    toast.success(`Data exported in ${format} format successfully`);
+  const teacherStats = {
+    totalTeachers: 58,
+    byDepartment: [
+      { department: "Science", count: 15, percentage: 26 },
+      { department: "Mathematics", count: 12, percentage: 21 },
+      { department: "Languages", count: 14, percentage: 24 },
+      { department: "Social Studies", count: 10, percentage: 17 },
+      { department: "Arts", count: 7, percentage: 12 }
+    ],
+    avgWorkload: 78,
+    satisfaction: 88
   };
-
-  // Transform data for pie chart
-  const overallPerformanceData = [
-    { name: 'Excellent', value: 40 },
-    { name: 'Good', value: 35 },
-    { name: 'Average', value: 18 },
-    { name: 'Need Improvement', value: 7 },
-  ];
 
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Reports</h2>
-            <p className="text-muted-foreground">
-              Generate and analyze various school reports.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Select value={reportPeriod} onValueChange={setReportPeriod}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select period" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-                <SelectItem value="term">This Term</SelectItem>
-                <SelectItem value="year">This Year</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">AI-Enhanced Reports & Analytics</h2>
+          <p className="text-muted-foreground">
+            Comprehensive insights powered by artificial intelligence and real-time data analysis
+          </p>
+          <Badge className="mt-2 bg-purple-100 text-purple-800">
+            <Brain className="h-3 w-3 mr-1" />
+            Enhanced with AI Analytics
+          </Badge>
         </div>
-        
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Students
-              </CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">1,245</div>
-              <p className="text-xs text-muted-foreground">
-                +5.2% from last term
-              </p>
-              <Button 
-                variant="ghost" 
-                className="w-full mt-4" 
-                onClick={() => handleGenerateReport('Student')}
-              >
-                Generate Report
-              </Button>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Overall Attendance
-              </CardTitle>
-              <BarChart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">93.8%</div>
-              <p className="text-xs text-muted-foreground">
-                +1.2% from last term
-              </p>
-              <Button 
-                variant="ghost" 
-                className="w-full mt-4" 
-                onClick={() => handleGenerateReport('Attendance')}
-              >
-                Generate Report
-              </Button>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Performance Index
-              </CardTitle>
-              <PieChart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">86.3%</div>
-              <p className="text-xs text-muted-foreground">
-                +3.1% from last term
-              </p>
-              <Button 
-                variant="ghost" 
-                className="w-full mt-4" 
-                onClick={() => handleGenerateReport('Performance')}
-              >
-                Generate Report
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <Tabs defaultValue="attendance" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="performance">Student Performance</TabsTrigger>
-            <TabsTrigger value="subjects">Subject Analysis</TabsTrigger>
-            <TabsTrigger value="teachers">Teacher Evaluation</TabsTrigger>
+
+        <Tabs defaultValue="ai-performance" className="w-full">
+          <TabsList className="grid w-full md:w-[600px] grid-cols-4">
+            <TabsTrigger value="ai-performance">
+              <Brain className="h-4 w-4 mr-1" />
+              AI Performance
+            </TabsTrigger>
+            <TabsTrigger value="ai-insights">
+              <Target className="h-4 w-4 mr-1" />
+              AI Insights
+            </TabsTrigger>
+            <TabsTrigger value="student-reports">Student Reports</TabsTrigger>
+            <TabsTrigger value="teacher-reports">Teacher Reports</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="attendance" className="space-y-4">
+
+          <TabsContent value="ai-performance" className="space-y-4 mt-4">
+            <AIPerformanceAnalytics />
+          </TabsContent>
+
+          <TabsContent value="ai-insights" className="space-y-4 mt-4">
+            <AIRecommendations />
+          </TabsContent>
+
+          <TabsContent value="student-reports" className="space-y-4 mt-4">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{studentStats.totalStudents.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">Across all grades</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Attendance Rate</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{studentStats.attendanceRate}%</div>
+                  <Progress value={studentStats.attendanceRate} className="mt-2 h-2" />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Top Performers</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600">{studentStats.performanceMetrics.excellent}%</div>
+                  <p className="text-xs text-muted-foreground">Excellent grade students</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Needs Support</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600">{studentStats.performanceMetrics.needsImprovement}%</div>
+                  <p className="text-xs text-muted-foreground">Require intervention</p>
+                </CardContent>
+              </Card>
+            </div>
+
             <Card>
               <CardHeader>
-                <CardTitle>Class Attendance Report</CardTitle>
-                <CardDescription>
-                  Attendance percentage by class for {reportPeriod === 'term' ? 'this term' : 
-                  reportPeriod === 'month' ? 'this month' : 
-                  reportPeriod === 'week' ? 'this week' : 'this year'}.
-                </CardDescription>
+                <CardTitle>Student Distribution by Grade</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RechartsBarChart data={attendanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="grade" />
-                      <YAxis domain={[80, 100]} />
-                      <Tooltip />
-                      <Bar dataKey="attendance" fill="#4f46e5" />
-                    </RechartsBarChart>
-                  </ResponsiveContainer>
+                <div className="space-y-4">
+                  {studentStats.byGrade.map((grade) => (
+                    <div key={grade.grade} className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm font-medium">{grade.grade}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {grade.count} students ({grade.percentage}%)
+                        </span>
+                      </div>
+                      <Progress value={grade.percentage} className="h-2" />
+                    </div>
+                  ))}
                 </div>
-                <div className="flex justify-center mt-4 gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handleExportData('PDF')}
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    Export as PDF
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handleExportData('Excel')}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Export as Excel
-                  </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Performance Distribution</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-4">
+                  <div className="text-center p-4 border rounded-lg bg-green-50">
+                    <div className="text-2xl font-bold text-green-600">{studentStats.performanceMetrics.excellent}%</div>
+                    <div className="text-sm text-green-700">Excellent</div>
+                  </div>
+                  <div className="text-center p-4 border rounded-lg bg-blue-50">
+                    <div className="text-2xl font-bold text-blue-600">{studentStats.performanceMetrics.good}%</div>
+                    <div className="text-sm text-blue-700">Good</div>
+                  </div>
+                  <div className="text-center p-4 border rounded-lg bg-yellow-50">
+                    <div className="text-2xl font-bold text-yellow-600">{studentStats.performanceMetrics.satisfactory}%</div>
+                    <div className="text-sm text-yellow-700">Satisfactory</div>
+                  </div>
+                  <div className="text-center p-4 border rounded-lg bg-red-50">
+                    <div className="text-2xl font-bold text-red-600">{studentStats.performanceMetrics.needsImprovement}%</div>
+                    <div className="text-sm text-red-700">Needs Improvement</div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
-          
-          <TabsContent value="performance" className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-6">
+
+          <TabsContent value="teacher-reports" className="space-y-4 mt-4">
+            <div className="grid gap-6 md:grid-cols-3">
               <Card>
-                <CardHeader>
-                  <CardTitle>Overall Student Performance</CardTitle>
-                  <CardDescription>
-                    Distribution of performance categories across all students.
-                  </CardDescription>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Total Teachers</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RechartsPieChart>
-                        <Pie
-                          data={overallPerformanceData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                          label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        >
-                          {overallPerformanceData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Legend />
-                        <Tooltip formatter={(value) => [`${value} students`, 'Count']} />
-                      </RechartsPieChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <div className="text-2xl font-bold">{teacherStats.totalTeachers}</div>
+                  <p className="text-xs text-muted-foreground">Active faculty members</p>
                 </CardContent>
               </Card>
-              
+
               <Card>
-                <CardHeader>
-                  <CardTitle>Class-wise Performance</CardTitle>
-                  <CardDescription>
-                    Performance breakdown by class.
-                  </CardDescription>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Average Workload</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RechartsBarChart data={performanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="grade" />
-                        <YAxis />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="excellent" name="Excellent" stackId="a" fill="#4f46e5" />
-                        <Bar dataKey="good" name="Good" stackId="a" fill="#3b82f6" />
-                        <Bar dataKey="average" name="Average" stackId="a" fill="#0ea5e9" />
-                        <Bar dataKey="poor" name="Need Improvement" stackId="a" fill="#f43f5e" />
-                      </RechartsBarChart>
-                    </ResponsiveContainer>
+                  <div className="text-2xl font-bold text-blue-600">{teacherStats.avgWorkload}%</div>
+                  <Progress value={teacherStats.avgWorkload} className="mt-2 h-2" />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Satisfaction Rate</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">{teacherStats.satisfaction}%</div>
+                  <div className="flex items-center gap-1 mt-1">
+                    <CheckCircle className="h-3 w-3 text-green-500" />
+                    <span className="text-xs text-muted-foreground">High satisfaction</span>
                   </div>
                 </CardContent>
               </Card>
             </div>
-            
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => handleGenerateReport('Detailed Performance')}
-                disabled={isGeneratingReport}
-              >
-                {isGeneratingReport ? (
-                  <>
-                    <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <FileText className="mr-2 h-4 w-4" />
-                    Generate Detailed Report
-                  </>
-                )}
-              </Button>
-              <Button onClick={() => handleExportData('Excel')}>
-                <ArrowDownToLine className="mr-2 h-4 w-4" />
-                Export Data
-              </Button>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="subjects" className="space-y-4">
+
             <Card>
               <CardHeader>
-                <CardTitle>Subject Performance Analysis</CardTitle>
-                <CardDescription>
-                  Performance breakdown by subject across all grades.
-                </CardDescription>
+                <CardTitle>Teacher Distribution by Department</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RechartsBarChart data={subjectPerformanceData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="subject" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="excellent" name="Excellent" stackId="a" fill="#4f46e5" />
-                      <Bar dataKey="good" name="Good" stackId="a" fill="#3b82f6" />
-                      <Bar dataKey="average" name="Average" stackId="a" fill="#0ea5e9" />
-                      <Bar dataKey="poor" name="Need Improvement" stackId="a" fill="#f43f5e" />
-                    </RechartsBarChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="flex justify-center mt-4 gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handleExportData('PDF')}
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    Export as PDF
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handleExportData('Excel')}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Export as Excel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="teachers" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Teacher Evaluation Report</CardTitle>
-                <CardDescription>
-                  Performance ratings for teachers based on student feedback.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="py-3 px-4 text-left">Teacher Name</th>
-                        <th className="py-3 px-4 text-left">Subject</th>
-                        <th className="py-3 px-4 text-left">Rating</th>
-                        <th className="py-3 px-4 text-left">Performance</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {teacherPerformanceData.map((teacher, index) => (
-                        <tr key={index} className="border-b border-gray-200">
-                          <td className="py-3 px-4">{teacher.name}</td>
-                          <td className="py-3 px-4">{teacher.subjects}</td>
-                          <td className="py-3 px-4">{teacher.rating}/5.0</td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-2">
-                              <div className="w-40 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                <div 
-                                  className="bg-blue-600 h-full rounded-full" 
-                                  style={{ width: `${(teacher.rating / 5) * 100}%` }} 
-                                />
-                              </div>
-                              <span className="text-sm">
-                                {teacher.rating >= 4.8 ? 'Excellent' : 
-                                 teacher.rating >= 4.5 ? 'Very Good' : 'Good'}
-                              </span>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="flex justify-end mt-6 gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => handleGenerateReport('Teacher Evaluation')}
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    Generate Detailed Report
-                  </Button>
+                <div className="space-y-4">
+                  {teacherStats.byDepartment.map((dept) => (
+                    <div key={dept.department} className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm font-medium">{dept.department}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {dept.count} teachers ({dept.percentage}%)
+                        </span>
+                      </div>
+                      <Progress value={dept.percentage} className="h-2" />
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
