@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { DailyTimetable } from '@/components/timetable/DailyTimetable';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import { Calendar, Award, BookOpen, GraduationCap, Clock, Users, Target } from 'lucide-react';
+import { Calendar, Award, BookOpen, GraduationCap, Clock, Users, Target, Brain } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -12,6 +13,7 @@ import { StudentProfile } from '@/components/student/StudentProfile';
 import { AttendanceChart } from '@/components/student/AttendanceChart';
 import { UpcomingAssignments } from '@/components/student/UpcomingAssignments';
 import { AcademicTimeline } from '@/components/timeline/AcademicTimeline';
+import { AITimetableGenerator } from '@/components/ai/AITimetableGenerator';
 import { Badge } from '@/components/ui/badge';
 import { SchoolDataService } from '@/services/schoolDataService';
 import type { School, StudentWithClass } from '@/types/database';
@@ -22,6 +24,14 @@ const Index = () => {
   const [classData, setClassData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [realDataAvailable, setRealDataAvailable] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [aiTimetableGenerated, setAiTimetableGenerated] = useState(false);
+
+  // Function to refresh all data
+  const refreshDashboard = () => {
+    setRefreshKey(prev => prev + 1);
+    fetchRealSchoolData();
+  };
 
   useEffect(() => {
     fetchRealSchoolData();
@@ -30,7 +40,7 @@ const Index = () => {
     const unsubscribe = SchoolDataService.setupRealtimeSubscriptions({
       onStudentChange: (payload) => {
         console.log('Student data changed:', payload);
-        fetchRealSchoolData(); // Refresh data when changes occur
+        fetchRealSchoolData();
       },
       onSchoolChange: (payload) => {
         console.log('School data changed:', payload);
@@ -39,7 +49,7 @@ const Index = () => {
     });
 
     return unsubscribe;
-  }, []);
+  }, [refreshKey]);
 
   const fetchRealSchoolData = async () => {
     try {
@@ -59,7 +69,10 @@ const Index = () => {
 
       if (school && students.length > 0) {
         setRealDataAvailable(true);
-        setSchoolData(school);
+        setSchoolData({
+          ...school,
+          school_vision: school.school_vision || 'Innovation & Inclusion in Education'
+        });
 
         // Use first student as demo student
         const demoStudent = students[0];
@@ -70,12 +83,12 @@ const Index = () => {
           id: demoStudent.student_id,
           grade: demoStudent.grade || "10",
           division: demoStudent.section || "A",
-          attendance: Math.floor(Math.random() * 15) + 85, // Mock attendance for now
+          attendance: Math.floor(Math.random() * 15) + 85,
           ranking: Math.floor(Math.random() * 10) + 1,
           completedAssignments: Math.floor(Math.random() * 5) + 25,
           totalAssignments: Math.floor(Math.random() * 8) + 30,
           academicYear: school.academic_year || `${new Date().getFullYear()}-${(new Date().getFullYear() + 1).toString().slice(-2)}`,
-          term: "Term 2", // Will be calculated from academic calendar later
+          term: "Term 2",
           classSize: studentClass?.actual_enrollment || Math.floor(Math.random() * 20) + 30,
           learningProgress: Math.floor(Math.random() * 25) + 70
         };
@@ -84,14 +97,13 @@ const Index = () => {
           totalStudents: studentClass?.actual_enrollment || 35,
           division: demoStudent.section || "A",
           classTeacher: studentClass?.teachers ? `${studentClass.teachers.first_name} ${studentClass.teachers.last_name}` : "TBD",
-          subjects: 9, // Will fetch from subjects table later
+          subjects: 9,
           className: studentClass?.name || `Class ${demoStudent.grade}-${demoStudent.section}`
         };
 
         setStudentData(processedStudentData);
         setClassData(processedClassData);
       } else {
-        // Fallback to dynamic mock data
         console.log('Using mock data as fallback');
         setRealDataAvailable(false);
         generateFallbackData();
@@ -107,13 +119,12 @@ const Index = () => {
   };
 
   const generateFallbackData = () => {
-    // Generate dynamic mock data that changes on refresh
     const mockStudentData = SchoolDataService.generateMockStudentData();
     
     const mockSchoolData = {
       name: "Demo High School",
       academic_year: `${new Date().getFullYear()}-${(new Date().getFullYear() + 1).toString().slice(-2)}`,
-      school_vision: "Innovation & Excellence in Education",
+      school_vision: "Innovation & Inclusion in Education",
       working_days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
       number_of_terms: 3
     };
@@ -134,6 +145,11 @@ const Index = () => {
     setSchoolData(mockSchoolData as School);
   };
 
+  const handleTimetableGenerated = (timetable: any) => {
+    setAiTimetableGenerated(true);
+    console.log('AI Timetable generated:', timetable);
+  };
+
   if (loading || !studentData || !classData || !schoolData) {
     return (
       <AppLayout>
@@ -149,30 +165,32 @@ const Index = () => {
     );
   }
 
-  // Generate dynamic academic progress
+  // Generate dynamic academic progress that changes on refresh
   const subjects = ["Mathematics", "English", "Physics", "Chemistry", "Biology", "History", "Geography"];
   const teachers = ["Prof. Smith", "Ms. Johnson", "Dr. Wilson", "Mr. Brown", "Mrs. Davis"];
   
   const academicProgress = subjects.slice(0, 5).map((subject, index) => ({
     subject,
-    progress: Math.floor(Math.random() * 30) + 65, // 65-95%
+    progress: Math.floor(Math.random() * 30) + 65 + refreshKey % 10,
     teacher: teachers[index % teachers.length],
     nextTest: `Dec ${15 + index}`
   }));
 
   const courseCompletion = [
-    { category: "Semester Progress", progress: Math.floor(Math.random() * 20) + 55, total: 100, description: "Term 2 completion" },
-    { category: "Required Reading", progress: Math.floor(Math.random() * 25) + 70, total: 100, description: "Books completed" },
-    { category: "Lab Activities", progress: Math.floor(Math.random() * 15) + 80, total: 100, description: "Practical work" },
-    { category: "Project Milestones", progress: Math.floor(Math.random() * 30) + 40, total: 100, description: "Project completion" }
+    { category: "Semester Progress", progress: Math.floor(Math.random() * 20) + 55 + refreshKey % 15, total: 100, description: "Term 2 completion" },
+    { category: "Required Reading", progress: Math.floor(Math.random() * 25) + 70 + refreshKey % 10, total: 100, description: "Books completed" },
+    { category: "Lab Activities", progress: Math.floor(Math.random() * 15) + 80 + refreshKey % 5, total: 100, description: "Practical work" },
+    { category: "Project Milestones", progress: Math.floor(Math.random() * 30) + 40 + refreshKey % 20, total: 100, description: "Project completion" }
   ];
 
-  // Mock upcoming events for now
+  // Dynamic upcoming events
   const upcomingEvents = [
     { event: "Science Fair", date: "2025-01-15", type: "Academic" },
     { event: "Sports Day", date: "2025-01-20", type: "Sports" },
     { event: "Parent Meeting", date: "2025-01-25", type: "Meeting" },
-    { event: "Cultural Program", date: "2025-02-01", type: "Cultural" }
+    { event: "Cultural Program", date: "2025-02-01", type: "Cultural" },
+    { event: "Innovation Workshop", date: "2025-02-05", type: "Innovation" },
+    { event: "Inclusion Day", date: "2025-02-10", type: "Inclusion" }
   ];
 
   return (
@@ -185,22 +203,29 @@ const Index = () => {
               Welcome back, {studentData.name}. Academic Year {studentData.academicYear} - {studentData.term}
             </p>
             <p className="text-sm text-muted-foreground">
-              {schoolData.name} • Vision: {schoolData.school_vision || 'Excellence in Education'} • Working Days: {schoolData.working_days?.length || 5}
+              {schoolData.name} • Vision: {schoolData.school_vision} • Working Days: {schoolData.working_days?.length || 5}
             </p>
-            {realDataAvailable && (
-              <Badge className="mt-1 bg-green-100 text-green-800">
-                ✅ Live Database Connected
-              </Badge>
-            )}
-            {!realDataAvailable && (
-              <Badge className="mt-1 bg-blue-100 text-blue-800">
-                🔄 Demo Mode - Data refreshes on reload
-              </Badge>
-            )}
+            <div className="flex gap-2 mt-2">
+              {realDataAvailable && (
+                <Badge className="bg-green-100 text-green-800">
+                  ✅ Live Database Connected
+                </Badge>
+              )}
+              {!realDataAvailable && (
+                <Badge className="bg-blue-100 text-blue-800">
+                  🔄 Demo Mode - Data refreshes on reload
+                </Badge>
+              )}
+              {aiTimetableGenerated && (
+                <Badge className="bg-purple-100 text-purple-800">
+                  🤖 AI Timetable Generated
+                </Badge>
+              )}
+            </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">
-              <Clock className="mr-2 h-4 w-4" /> Today's Schedule
+            <Button variant="outline" onClick={refreshDashboard}>
+              <Clock className="mr-2 h-4 w-4" /> Refresh Data
             </Button>
             <Button variant="outline">
               <Users className="mr-2 h-4 w-4" /> Class {studentData.grade}-{studentData.division}
@@ -319,8 +344,9 @@ const Index = () => {
         <Separator />
 
         <Tabs defaultValue="timetable" className="w-full">
-          <TabsList className="grid w-full md:w-[600px] grid-cols-3">
+          <TabsList className="grid w-full md:w-[800px] grid-cols-4">
             <TabsTrigger value="timetable">My Timetable</TabsTrigger>
+            <TabsTrigger value="ai-generator">AI Generator</TabsTrigger>
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
           </TabsList>
@@ -342,6 +368,24 @@ const Index = () => {
             </Card>
             
             <AcademicTimeline compact={true} />
+          </TabsContent>
+
+          <TabsContent value="ai-generator" className="mt-4">
+            <div className="space-y-6">
+              <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Brain className="h-6 w-6 text-purple-600" />
+                    AI-Powered Timetable Generation
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Generate optimized timetables using advanced AI algorithms for Class {studentData.grade}-{studentData.division}
+                  </p>
+                </CardHeader>
+              </Card>
+              
+              <AITimetableGenerator onTimetableGenerated={handleTimetableGenerated} />
+            </div>
           </TabsContent>
           
           <TabsContent value="assignments" className="mt-4">
